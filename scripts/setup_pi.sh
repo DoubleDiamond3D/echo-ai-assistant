@@ -38,7 +38,8 @@ apt-get install -y \
   network-manager hostapd dnsmasq \
   i2c-tools python3-smbus \
   python3-gpiozero python3-rpi.gpio \
-  build-essential cmake pkg-config
+  build-essential cmake pkg-config \
+  portaudio19-dev python3-pyaudio
 
 echo "🔧 Setting up audio..."
 # Enable audio
@@ -186,7 +187,11 @@ echo "🔧 Next Steps:"
 echo "1. Configure your Ollama server URL in $ENV_FILE"
 echo "2. Add your OpenAI API key (optional) in $ENV_FILE"
 echo "3. Set up Cloudflare tunnel token for remote access (optional)"
-echo "4. Access the web interface and configure your settings"
+echo "4. Configure wake word detection (optional):"
+echo "   - Get Porcupine API key from https://picovoice.ai/"
+echo "   - Set PORCUPINE_ACCESS_KEY in $ENV_FILE"
+echo "   - Or use Snowboy with a model file"
+echo "5. Access the web interface and configure your settings"
 echo ""
 echo "📚 Useful Commands:"
 echo "  sudo systemctl status echo_web.service    # Check web service"
