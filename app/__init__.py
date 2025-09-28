@@ -99,7 +99,6 @@ def create_app() -> Flask:
         return send_from_directory(settings.web_dir / "assets", asset)
 
     # Initialize services on startup
-    @app.before_first_request
     def initialize_services():
         # Start voice input if enabled
         if settings.voice_input_enabled:
@@ -115,6 +114,10 @@ def create_app() -> Flask:
         chat_log_service.cleanup_old_logs()
         
         LOGGER.info("Echo services initialized successfully")
+    
+    # Initialize services when app starts
+    with app.app_context():
+        initialize_services()
 
     @app.errorhandler(404)
     def not_found(_):
