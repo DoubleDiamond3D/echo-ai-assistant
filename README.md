@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Echo AI Assistant 🤖
 
 A comprehensive AI-powered telepresence and automation platform designed for Raspberry Pi. Echo combines voice interaction, computer vision, face recognition, and intelligent decision-making to create a truly interactive AI assistant.
@@ -357,3 +358,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Echo AI Assistant** - Bringing intelligence to your Raspberry Pi! 🤖✨
+=======
+# echo-ai-assistant
+>>>>>>> 4d60de218488589dfc459239e1b43e4715f99dec
