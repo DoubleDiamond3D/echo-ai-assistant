@@ -28,16 +28,17 @@ apt-get install -y \
   python3 python3-venv python3-dev python3-pip \
   ffmpeg espeak alsa-utils \
   python3-opencv python3-numpy \
-  libatlas-base-dev libhdf5-dev libhdf5-serial-dev \
-  libqtgui4 libqtwebkit4 libqt4-test python3-pyqt5 \
+  libatlas-base-dev libhdf5-dev \
+  python3-pyqt5 python3-pyqt5.qtwidgets \
   libavformat-dev libavcodec-dev libswscale-dev \
   libv4l-dev libxvidcore-dev libx264-dev \
   libjpeg-dev libpng-dev libtiff-dev \
-  libatlas-base-dev gfortran \
+  gfortran \
   git rsync curl wget \
   network-manager hostapd dnsmasq \
   i2c-tools python3-smbus \
-  python3-gpiozero python3-rpi.gpio
+  python3-gpiozero python3-rpi.gpio \
+  build-essential cmake pkg-config
 
 echo "🔧 Setting up audio..."
 # Enable audio

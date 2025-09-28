@@ -43,9 +43,19 @@ A comprehensive AI-powered telepresence and automation platform designed for Ras
 
 ## 🚀 Quick Start
 
-### Option 1: Pre-built Pi OS Image (Recommended) ⭐
+### Option 1: One-Line Installation (Fastest) ⚡
 
-**Easiest way to get started!**
+**Install on any Raspberry Pi in seconds!**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DoubleDiamond3D/echo-ai-assistant/main/scripts/setup_pi.sh | sudo bash
+```
+
+**That's it!** Access your Echo AI Assistant at `http://[PI_IP]:5000`
+
+### Option 2: Pre-built Pi OS Image (Complete Setup) ⭐
+
+**Easiest way to get started with a fresh Pi!**
 
 1. **Download the latest image** from [Releases](https://github.com/DoubleDiamond3D/echo-ai-assistant/releases)
 2. **Use Raspberry Pi Imager**:
