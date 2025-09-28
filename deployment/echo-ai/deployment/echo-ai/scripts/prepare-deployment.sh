@@ -53,7 +53,7 @@ sudo apt install -y \
     ffmpeg espeak alsa-utils \
     python3-opencv python3-numpy \
     libatlas-base-dev libhdf5-dev libhdf5-serial-dev \
-    python3-pyqt5 python3-pyqt5.qtwidgets \
+    python3-pyqt5 \
     libavformat-dev libavcodec-dev libswscale-dev \
     libv4l-dev libxvidcore-dev libx264-dev \
     libjpeg-dev libpng-dev libtiff-dev \
