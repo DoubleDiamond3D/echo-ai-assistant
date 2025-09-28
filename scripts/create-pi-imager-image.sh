@@ -95,7 +95,7 @@ create_setup_instructions() {
 
 ```bash
 # Download and run the Echo setup
-curl -fsSL https://raw.githubusercontent.com/yourusername/echo-ai-assistant/main/scripts/setup_pi.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/DoubleDiamond3D/echo-ai-assistant/main/scripts/setup_pi.sh | sudo bash
 ```
 
 **OR** if you have the deployment package:
@@ -143,7 +143,7 @@ If the automated setup doesn't work, you can manually install Echo:
 
 4. **Download Echo:**
    ```bash
-   git clone https://github.com/yourusername/echo-ai-assistant.git
+   git clone https://github.com/DoubleDiamond3D/echo-ai-assistant.git
    cd echo-ai-assistant
    ```
 
@@ -162,9 +162,9 @@ If the automated setup doesn't work, you can manually install Echo:
 
 ## 📚 More Information
 
-- **Full Documentation:** https://github.com/yourusername/echo-ai-assistant
-- **Issues:** https://github.com/yourusername/echo-ai-assistant/issues
-- **Discussions:** https://github.com/yourusername/echo-ai-assistant/discussions
+- **Full Documentation:** https://github.com/DoubleDiamond3D/echo-ai-assistant
+- **Issues:** https://github.com/DoubleDiamond3D/echo-ai-assistant/issues
+- **Discussions:** https://github.com/DoubleDiamond3D/echo-ai-assistant/discussions
 
 Happy building! 🤖✨
 EOF

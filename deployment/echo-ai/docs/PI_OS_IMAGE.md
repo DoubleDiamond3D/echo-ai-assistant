@@ -38,7 +38,7 @@ The custom Pi OS image includes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/echo-ai-assistant.git
+git clone https://github.com/DoubleDiamond3D/echo-ai-assistant.git
 cd echo-ai-assistant
 
 # Install dependencies
@@ -54,7 +54,7 @@ chmod +x scripts/build_pi_os.sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/echo-ai-assistant.git
+git clone https://github.com/DoubleDiamond3D/echo-ai-assistant.git
 cd echo-ai-assistant
 
 # Build with Docker
@@ -273,7 +273,7 @@ sudo systemctl restart echo_web.service
 - [Main Documentation](../README.md)
 - [API Reference](../docs/API.md)
 - [Configuration Guide](../docs/CONFIGURATION.md)
-- [GitHub Repository](https://github.com/yourusername/echo-ai-assistant)
+- [GitHub Repository](https://github.com/DoubleDiamond3D/echo-ai-assistant)
 
 ---
 

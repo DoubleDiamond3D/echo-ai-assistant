@@ -46,7 +46,7 @@ A comprehensive AI-powered telepresence and automation platform designed for Ras
 
 **Easiest way to get started!**
 
-1. **Download the latest image** from [Releases](https://github.com/yourusername/echo-ai-assistant/releases)
+1. **Download the latest image** from [Releases](https://github.com/DoubleDiamond3D/echo-ai-assistant/releases)
 2. **Use Raspberry Pi Imager**:
    - Download [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/)
    - Select "Use custom image"
@@ -68,7 +68,7 @@ A comprehensive AI-powered telepresence and automation platform designed for Ras
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/echo-ai-assistant.git
+   git clone https://github.com/DoubleDiamond3D/echo-ai-assistant.git
    cd echo-ai-assistant
    ```
 
@@ -290,7 +290,7 @@ Want to create your own custom Pi OS image? We've got you covered!
 ### Quick Build
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/echo-ai-assistant.git
+git clone https://github.com/DoubleDiamond3D/echo-ai-assistant.git
 cd echo-ai-assistant
 
 # Run the quick build script
@@ -349,9 +349,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [Wiki](https://github.com/yourusername/echo-ai-assistant/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/echo-ai-assistant/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/echo-ai-assistant/discussions)
+- **Documentation**: [Wiki](https://github.com/DoubleDiamond3D/echo-ai-assistant/wiki)
+- **Issues**: [GitHub Issues](https://github.com/DoubleDiamond3D/echo-ai-assistant/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/DoubleDiamond3D/echo-ai-assistant/discussions)
 - **Email**: support@echo-ai.dev
 
 ---
