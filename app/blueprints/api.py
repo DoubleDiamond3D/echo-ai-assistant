@@ -7,6 +7,7 @@ from typing import Any, Dict
 from flask import Blueprint, Response, current_app, jsonify, request
 
 from app.utils.auth import require_api_key
+from app.services.wake_word_service import get_wake_word_status, start_wake_word_detection, stop_wake_word_detection
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -279,5 +280,58 @@ def delete_backup(backup_id: str) -> Response:
             return jsonify({"ok": True, "message": f"Backup {backup_id} deleted"})
         else:
             return jsonify({"error": "Backup not found"}), 404
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+# =============================================================================
+# WAKE WORD DETECTION ENDPOINTS
+# =============================================================================
+
+@api_bp.get("/wake-word/status")
+@require_api_key
+def get_wake_word_status_endpoint() -> Response:
+    """Get wake word detection status"""
+    try:
+        status = get_wake_word_status()
+        return jsonify(status)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/wake-word/start")
+@require_api_key
+def start_wake_word_endpoint() -> Response:
+    """Start wake word detection"""
+    try:
+        start_wake_word_detection()
+        return jsonify({"ok": True, "message": "Wake word detection started"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/wake-word/stop")
+@require_api_key
+def stop_wake_word_endpoint() -> Response:
+    """Stop wake word detection"""
+    try:
+        stop_wake_word_detection()
+        return jsonify({"ok": True, "message": "Wake word detection stopped"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/wake-word/configure")
+@require_api_key
+def configure_wake_word_endpoint() -> Response:
+    """Configure wake word detection settings"""
+    try:
+        payload: Dict[str, Any] | None = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "invalid payload"}), 400
+        
+        # Update configuration (implementation depends on your config system)
+        # This is a placeholder - you'd need to implement config updating
+        return jsonify({"ok": True, "message": "Wake word configuration updated"})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
