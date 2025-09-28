@@ -1,0 +1,20 @@
+[Unit]
+Description=Project Echo Web Control Center
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/project-echo
+EnvironmentFile=/opt/project-echo/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/project-echo/.venv/bin/gunicorn --workers 2 --threads 4 --bind 0.0.0.0:5000 run:app
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
+

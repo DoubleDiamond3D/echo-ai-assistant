@@ -1,0 +1,20 @@
+[Unit]
+Description=Project Echo Face Renderer
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/project-echo
+EnvironmentFile=/opt/project-echo/.env
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/echo/.Xauthority
+ExecStart=/opt/project-echo/.venv/bin/python /opt/project-echo/echo_face.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target
+
