@@ -1,10 +1,12 @@
 """Threaded OpenCV camera management."""
 from __future__ import annotations
 
+import glob
+import os
 import threading
 import time
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 try:
     import cv2  # type: ignore
@@ -125,3 +127,62 @@ class CameraService:
         if name not in self._streams:
             raise KeyError(f"Unknown camera: {name}")
         return self._streams[name]
+    
+    @staticmethod
+    def auto_detect_cameras() -> List[CameraConfig]:
+        """Auto-detect available cameras"""
+        cameras = []
+        
+        if cv2 is None:
+            return cameras
+        
+        # Check /dev/video* devices
+        video_devices = glob.glob("/dev/video*")
+        video_devices.sort()
+        
+        for device in video_devices:
+            try:
+                # Extract device number
+                device_num = int(device.split("video")[1])
+                
+                # Test if camera works
+                cap = cv2.VideoCapture(device_num)
+                if cap.isOpened():
+                    # Get camera properties
+                    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    fps = int(cap.get(cv2.CAP_PROP_FPS))
+                    
+                    # Create camera config
+                    config = CameraConfig(
+                        name=f"camera_{device_num}",
+                        device=device,
+                        resolution=(width, height),
+                        fps=fps if fps > 0 else 30
+                    )
+                    cameras.append(config)
+                    
+                    cap.release()
+                    
+            except (ValueError, Exception):
+                continue
+        
+        return cameras
+    
+    @staticmethod
+    def get_camera_info() -> Dict[str, any]:
+        """Get information about available cameras"""
+        cameras = CameraService.auto_detect_cameras()
+        
+        return {
+            "detected_cameras": len(cameras),
+            "cameras": [
+                {
+                    "name": cam.name,
+                    "device": cam.device,
+                    "resolution": f"{cam.resolution[0]}x{cam.resolution[1]}",
+                    "fps": cam.fps
+                }
+                for cam in cameras
+            ]
+        }

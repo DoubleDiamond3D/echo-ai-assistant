@@ -8,6 +8,7 @@ from flask import Blueprint, Response, current_app, jsonify, request
 
 from app.utils.auth import require_api_key
 from app.services.wake_word_service import get_wake_word_status, start_wake_word_detection, stop_wake_word_detection
+from app.services.camera_service import CameraService
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -50,6 +51,17 @@ def patch_state() -> Response:
 def metrics() -> Response:
     metrics = _svc("metrics_service").current()
     return jsonify(metrics)
+
+
+@api_bp.get("/cameras/detect")
+@require_api_key
+def detect_cameras() -> Response:
+    """Auto-detect available cameras"""
+    try:
+        camera_info = CameraService.get_camera_info()
+        return jsonify(camera_info)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
 
 
 @api_bp.post("/speak")
