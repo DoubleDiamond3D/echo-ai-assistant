@@ -233,6 +233,9 @@ curl -X POST http://localhost:5000/api/voice/start \
 ### Remote Access
 
 1. **Cloudflare Tunnel**: Secure remote access without port forwarding
+   - [Complete Setup Guide](docs/CLOUDFLARE_TUNNEL.md)
+   - Automatic HTTPS with SSL certificates
+   - No router port forwarding required
 2. **VPN Support**: Works with WireGuard and other VPN solutions
 3. **Dynamic DNS**: Automatic IP address updates
 4. **SSL/TLS**: Encrypted connections for security
