@@ -39,7 +39,8 @@ apt-get install -y \
   i2c-tools python3-smbus \
   python3-gpiozero python3-rpi.gpio \
   build-essential cmake pkg-config \
-  portaudio19-dev python3-pyaudio
+  portaudio19-dev python3-pyaudio \
+  ca-certificates gnupg
 
 echo "🔧 Setting up audio..."
 # Enable audio
@@ -48,6 +49,17 @@ echo "snd_bcm2835" >> /etc/modules
 
 # Configure audio for USB microphones
 usermod -a -G audio "$TARGET_USER"
+
+echo "🌐 Installing Cloudflare Tunnel..."
+# Add Cloudflare GPG key
+mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+
+# Add Cloudflare repository
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | tee /etc/apt/sources.list.d/cloudflared.list
+
+# Install cloudflared
+apt-get update && apt-get install -y cloudflared
 
 echo "📁 Installing Echo AI Assistant..."
 mkdir -p "$INSTALL_DIR"
@@ -186,7 +198,10 @@ echo ""
 echo "🔧 Next Steps:"
 echo "1. Configure your Ollama server URL in $ENV_FILE"
 echo "2. Add your OpenAI API key (optional) in $ENV_FILE"
-echo "3. Set up Cloudflare tunnel token for remote access (optional)"
+echo "3. Set up Cloudflare tunnel for remote access:"
+echo "   - Get tunnel token from https://dash.cloudflare.com/"
+echo "   - Set CLOUDFLARE_TUNNEL_TOKEN in $ENV_FILE"
+echo "   - Run: cloudflared tunnel --url http://localhost:5000"
 echo "4. Configure wake word detection (optional):"
 echo "   - Get Porcupine API key from https://picovoice.ai/"
 echo "   - Set PORCUPINE_ACCESS_KEY in $ENV_FILE"
