@@ -873,9 +873,12 @@ class EchoDashboard {
     async scanWiFiNetworks() {
         try {
             this.showNotification('Scanning for WiFi networks...', 'info');
-            const response = await fetch('/api/wifi/scan', {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/wifi/scan`, {
                 method: 'GET',
-                headers: { 'X-API-Key': 'web-interface' }
+                headers: { 'X-API-Key': apiKey }
             });
             
             if (response.ok) {
@@ -885,7 +888,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to scan WiFi networks');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error scanning WiFi:', error);
             this.showNotification('Failed to scan WiFi networks', 'error');
         }
@@ -943,9 +946,12 @@ class EchoDashboard {
     async scanBluetoothDevices() {
         try {
             this.showNotification('Scanning for Bluetooth devices...', 'info');
-            const response = await fetch('/api/bluetooth/scan', {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/bluetooth/scan`, {
                 method: 'GET',
-                headers: { 'X-API-Key': 'web-interface' }
+                headers: { 'X-API-Key': apiKey }
             });
             
             if (response.ok) {
@@ -954,8 +960,8 @@ class EchoDashboard {
                 this.showNotification('Bluetooth scan completed', 'success');
             } else {
                 throw new Error('Failed to scan Bluetooth devices');
-    }
-  } catch (error) {
+            }
+        } catch (error) {
             console.error('Error scanning Bluetooth:', error);
             this.showNotification('Failed to scan Bluetooth devices', 'error');
         }
@@ -1011,9 +1017,12 @@ class EchoDashboard {
     async restartSystem() {
         if (confirm('Are you sure you want to restart the system?')) {
             try {
-                const response = await fetch('/api/system/restart', {
+                const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+                const apiKey = this.settings.echoApiKey || 'web-interface';
+                
+                const response = await fetch(`${apiUrl}/api/system/restart`, {
                     method: 'POST',
-                    headers: { 'X-API-Key': 'web-interface' }
+                    headers: { 'X-API-Key': apiKey }
                 });
                 
                 if (response.ok) {
@@ -1021,7 +1030,7 @@ class EchoDashboard {
                 } else {
                     throw new Error('Failed to restart system');
                 }
-  } catch (error) {
+            } catch (error) {
                 console.error('Error restarting system:', error);
                 this.showNotification('Failed to restart system', 'error');
             }
@@ -1031,9 +1040,12 @@ class EchoDashboard {
     async createBackup() {
         try {
             this.showNotification('Creating backup...', 'info');
-            const response = await fetch('/api/backup/create', {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/system/backup`, {
                 method: 'POST',
-                headers: { 'X-API-Key': 'web-interface' }
+                headers: { 'X-API-Key': apiKey }
             });
             
             if (response.ok) {

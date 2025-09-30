@@ -29,6 +29,45 @@ def health() -> Response:
     return jsonify(payload)
 
 
+@api_bp.get("/status")
+@require_api_key
+def get_status() -> Response:
+    """Get system status and metrics"""
+    try:
+        import psutil
+        import os
+        
+        # Get system metrics
+        cpu_usage = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Get uptime
+        uptime_seconds = time.time() - psutil.boot_time()
+        
+        # Get temperature (Raspberry Pi)
+        temperature = 0
+        try:
+            with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                temperature = float(f.read()) / 1000.0
+        except:
+            pass
+        
+        return jsonify({
+            "status": "ok",
+            "uptime": int(uptime_seconds),
+            "cpu_usage": cpu_usage,
+            "memory_usage": memory.percent,
+            "memory_available": memory.available,
+            "disk_usage": disk.percent,
+            "disk_free": disk.free,
+            "temperature": temperature,
+            "timestamp": time.time()
+        })
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
 @api_bp.get("/state")
 @require_api_key
 def get_state() -> Response:
@@ -402,5 +441,132 @@ def update_settings() -> Response:
             camera_service.ensure_started("head")
         
         return jsonify({"ok": True, "message": "Settings updated and services restarted"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+# =============================================================================
+# MEDIA ENDPOINTS
+# =============================================================================
+
+@api_bp.get("/media")
+@require_api_key
+def get_media() -> Response:
+    """Get list of media files"""
+    try:
+        # For now, return empty list - this would need to be implemented
+        # based on your media storage system
+        return jsonify([])
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/media/upload")
+@require_api_key
+def upload_media() -> Response:
+    """Upload media file"""
+    try:
+        # For now, return success - this would need to be implemented
+        # based on your media storage system
+        return jsonify({"ok": True, "message": "Media upload not yet implemented"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+# =============================================================================
+# NETWORK ENDPOINTS
+# =============================================================================
+
+@api_bp.get("/wifi/scan")
+@require_api_key
+def scan_wifi() -> Response:
+    """Scan for available WiFi networks"""
+    try:
+        # For now, return empty list - this would need to be implemented
+        # using system commands like nmcli or iwlist
+        return jsonify([])
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/wifi/connect")
+@require_api_key
+def connect_wifi() -> Response:
+    """Connect to WiFi network"""
+    try:
+        payload: Dict[str, Any] | None = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "invalid payload"}), 400
+        
+        ssid = payload.get("ssid", "")
+        password = payload.get("password", "")
+        
+        if not ssid:
+            return jsonify({"error": "SSID is required"}), 400
+        
+        # For now, return success - this would need to be implemented
+        # using system commands like nmcli
+        return jsonify({"ok": True, "message": f"WiFi connection to {ssid} not yet implemented"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.get("/bluetooth/scan")
+@require_api_key
+def scan_bluetooth() -> Response:
+    """Scan for available Bluetooth devices"""
+    try:
+        # For now, return empty list - this would need to be implemented
+        # using system commands like bluetoothctl
+        return jsonify([])
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/bluetooth/connect")
+@require_api_key
+def connect_bluetooth() -> Response:
+    """Connect to Bluetooth device"""
+    try:
+        payload: Dict[str, Any] | None = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "invalid payload"}), 400
+        
+        device_id = payload.get("device_id", "")
+        
+        if not device_id:
+            return jsonify({"error": "Device ID is required"}), 400
+        
+        # For now, return success - this would need to be implemented
+        # using system commands like bluetoothctl
+        return jsonify({"ok": True, "message": f"Bluetooth connection to {device_id} not yet implemented"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+# =============================================================================
+# SYSTEM ENDPOINTS
+# =============================================================================
+
+@api_bp.post("/system/restart")
+@require_api_key
+def restart_system() -> Response:
+    """Restart the Echo AI system"""
+    try:
+        # For now, return success - this would need to be implemented
+        # using system commands like systemctl
+        return jsonify({"ok": True, "message": "System restart not yet implemented"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/system/backup")
+@require_api_key
+def create_system_backup() -> Response:
+    """Create a system backup"""
+    try:
+        # For now, return success - this would need to be implemented
+        # using the backup service
+        return jsonify({"ok": True, "message": "System backup not yet implemented"})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
