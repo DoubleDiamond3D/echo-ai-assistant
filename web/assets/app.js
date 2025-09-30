@@ -156,6 +156,8 @@ class EchoDashboard {
             wakeWordEnabled: true,
             wakeWordSensitivity: 0.7,
             voiceSpeed: 1.0,
+            echoApiUrl: 'http://localhost:5000',
+            echoApiKey: '',
             openaiKey: '',
             anthropicKey: '',
             ollamaUrl: 'http://localhost:11434',
@@ -184,6 +186,8 @@ class EchoDashboard {
         this.settings.wakeWordEnabled = document.getElementById('wake-word-enabled')?.checked || false;
         this.settings.wakeWordSensitivity = parseFloat(document.getElementById('wake-word-sensitivity')?.value || 0.7);
         this.settings.voiceSpeed = parseFloat(document.getElementById('voice-speed')?.value || 1.0);
+        this.settings.echoApiUrl = document.getElementById('echo-api-url')?.value || 'http://localhost:5000';
+        this.settings.echoApiKey = document.getElementById('echo-api-key')?.value || '';
         this.settings.openaiKey = document.getElementById('openai-key')?.value || '';
         this.settings.anthropicKey = document.getElementById('anthropic-key')?.value || '';
         this.settings.ollamaUrl = document.getElementById('ollama-url')?.value || 'http://localhost:11434';
@@ -234,6 +238,12 @@ class EchoDashboard {
         }
         if (document.getElementById('voice-speed')) {
             document.getElementById('voice-speed').value = this.settings.voiceSpeed;
+        }
+        if (document.getElementById('echo-api-url')) {
+            document.getElementById('echo-api-url').value = this.settings.echoApiUrl;
+        }
+        if (document.getElementById('echo-api-key')) {
+            document.getElementById('echo-api-key').value = this.settings.echoApiKey;
         }
         if (document.getElementById('openai-key')) {
             document.getElementById('openai-key').value = this.settings.openaiKey;
@@ -626,10 +636,13 @@ class EchoDashboard {
 
     async updateStatus() {
         try {
-            const response = await fetch('/api/status', {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/status`, {
                 method: 'GET',
                 headers: {
-                    'X-API-Key': 'web-interface'
+                    'X-API-Key': apiKey
                 }
             });
 
