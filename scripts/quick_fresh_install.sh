@@ -16,11 +16,16 @@ echo "This will completely remove and reinstall Echo AI Assistant."
 echo ""
 
 # Confirm
-read -p "Continue? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Installation cancelled."
-    exit 0
+# Support non-interactive mode via QUICK_INSTALL_YES=1
+if [[ -z "$QUICK_INSTALL_YES" ]]; then
+  read -p "Continue? (y/N): " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Installation cancelled."
+      exit 0
+  fi
+else
+  echo "Auto-approve enabled (QUICK_INSTALL_YES=1). Proceeding..."
 fi
 
 echo ""

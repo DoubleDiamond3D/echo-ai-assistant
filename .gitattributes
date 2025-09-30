@@ -1,0 +1,14 @@
+# Normalize line endings and enforce LF on UNIX-relevant files
+*.sh text eol=lf
+*.service text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Keep images/binaries as-is
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+
