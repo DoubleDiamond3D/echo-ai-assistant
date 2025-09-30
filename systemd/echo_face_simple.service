@@ -1,0 +1,23 @@
+[Unit]
+Description=Echo Face Renderer (Simple)
+After=multi-user.target
+Wants=multi-user.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=/opt/echo-ai/.env
+Environment=PYGAME_HIDE_SUPPORT_PROMPT=1
+Environment=SDL_VIDEODRIVER=dummy
+ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face_simple.py
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=10
+TimeoutStopSec=5
+KillMode=mixed
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
