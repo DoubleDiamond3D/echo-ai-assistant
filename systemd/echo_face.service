@@ -1,7 +1,7 @@
 [Unit]
 Description=Project Echo Face Renderer
-After=graphical.target
-Wants=graphical.target
+After=multi-user.target
+Wants=multi-user.target
 
 [Service]
 Type=simple
@@ -9,12 +9,13 @@ User=echo
 Group=echo
 WorkingDirectory=/opt/echo-ai
 EnvironmentFile=/opt/echo-ai/.env
-Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/echo/.Xauthority
+Environment=SDL_VIDEODRIVER=fbcon
+Environment=FRAMEBUFFER=/dev/fb0
+Environment=PYGAME_HIDE_SUPPORT_PROMPT=1
 ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face.py
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target
 
