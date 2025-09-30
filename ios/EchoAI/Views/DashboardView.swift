@@ -402,3 +402,4 @@ struct QuickActionButton: View {
         .environmentObject(NotificationManager())
         .environmentObject(SmartHomeManager())
 }
+

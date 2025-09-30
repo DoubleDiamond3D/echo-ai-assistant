@@ -276,3 +276,4 @@ struct ImagePicker: UIViewControllerRepresentable {
     CameraView()
         .environmentObject(EchoService())
 }
+

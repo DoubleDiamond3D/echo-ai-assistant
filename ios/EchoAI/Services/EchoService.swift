@@ -475,3 +475,4 @@ enum APIError: Error {
     case invalidData
     case networkError(Error)
 }
+

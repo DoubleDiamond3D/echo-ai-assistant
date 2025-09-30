@@ -80,3 +80,4 @@ struct ContentView: View {
         .environmentObject(NotificationManager())
         .environmentObject(SmartHomeManager())
 }
+

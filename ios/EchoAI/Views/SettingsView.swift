@@ -559,3 +559,4 @@ struct WebView: View {
         .environmentObject(NotificationManager())
         .environmentObject(SmartHomeManager())
 }
+

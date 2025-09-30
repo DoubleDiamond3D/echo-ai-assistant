@@ -23,9 +23,59 @@ def load_state(state_path: Path) -> dict:
         return {"state": "idle", "last_talk": 0.0, "toggles": {}}
 
 
+def load_wallpaper(surface: pygame.Surface) -> pygame.Surface | None:
+    """Load wallpaper if it exists"""
+    wallpaper_path = "/opt/echo-ai/wallpapers/wallpaper.jpg"
+    video_path = "/opt/echo-ai/wallpapers/wallpaper.mp4"
+    
+    # Try image first
+    if os.path.exists(wallpaper_path):
+        try:
+            wallpaper = pygame.image.load(wallpaper_path)
+            # Scale to fit screen while maintaining aspect ratio
+            screen_width, screen_height = surface.get_size()
+            wallpaper_width, wallpaper_height = wallpaper.get_size()
+            
+            # Calculate scale to fill screen
+            scale_x = screen_width / wallpaper_width
+            scale_y = screen_height / wallpaper_height
+            scale = max(scale_x, scale_y)  # Use max to fill screen
+            
+            new_width = int(wallpaper_width * scale)
+            new_height = int(wallpaper_height * scale)
+            wallpaper = pygame.transform.scale(wallpaper, (new_width, new_height))
+            
+            return wallpaper
+        except Exception as e:
+            print(f"Error loading wallpaper image: {e}")
+    
+    # Try video if image doesn't exist
+    elif os.path.exists(video_path):
+        try:
+            # For video, we'll just return a placeholder for now
+            # In a full implementation, you'd use pygame.movie or similar
+            print("Video wallpaper detected but not implemented yet")
+        except Exception as e:
+            print(f"Error loading wallpaper video: {e}")
+    
+    return None
+
+
 def draw_face(surface: pygame.Surface, mood: str, timestamp: float) -> None:
-    surface.fill((5, 5, 12))
     width, height = surface.get_size()
+    
+    # Try to load and draw wallpaper
+    wallpaper = load_wallpaper(surface)
+    if wallpaper:
+        # Center the wallpaper
+        wallpaper_width, wallpaper_height = wallpaper.get_size()
+        x = (width - wallpaper_width) // 2
+        y = (height - wallpaper_height) // 2
+        surface.blit(wallpaper, (x, y))
+    else:
+        # Default background if no wallpaper
+        surface.fill((5, 5, 12))
+    
     eye_y = int(height * 0.33)
     eye_dx = int(width * 0.22)
     eye_radius = int(height * 0.12)

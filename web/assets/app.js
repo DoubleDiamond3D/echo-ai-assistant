@@ -10,6 +10,7 @@ class EchoDashboard {
         this.init();
     }
 
+
     init() {
         this.setupEventListeners();
         this.startStatusUpdates();
@@ -85,7 +86,7 @@ class EchoDashboard {
         // Media Controls
         const mediaUpload = document.getElementById('media-upload');
         const clearMedia = document.getElementById('clear-media');
-        const setWallpaper = document.getElementById('set-wallpaper');
+        const setPiWallpaper = document.getElementById('set-pi-wallpaper');
 
         if (mediaUpload) {
             mediaUpload.addEventListener('change', (e) => this.handleMediaUpload(e.target.files[0]));
@@ -93,8 +94,8 @@ class EchoDashboard {
         if (clearMedia) {
             clearMedia.addEventListener('click', () => this.clearMedia());
         }
-        if (setWallpaper) {
-            setWallpaper.addEventListener('click', () => this.setWallpaper());
+        if (setPiWallpaper) {
+            setPiWallpaper.addEventListener('click', () => this.setPiWallpaper());
         }
 
         // WiFi Controls
@@ -492,9 +493,9 @@ class EchoDashboard {
                 document.getElementById('start-recording').textContent = 'Stop Recording';
                 document.getElementById('stop-recording').style.display = 'inline-block';
                 this.showNotification('Recording started', 'success');
-            } else {
+    } else {
                 throw new Error('Failed to start recording');
-            }
+    }
   } catch (error) {
             console.error('Error starting recording:', error);
             this.showNotification('Failed to start recording', 'error');
@@ -524,7 +525,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to stop recording');
             }
-        } catch (error) {
+  } catch (error) {
             console.error('Error stopping recording:', error);
             this.showNotification('Failed to stop recording', 'error');
         }
@@ -707,8 +708,52 @@ class EchoDashboard {
         this.showNotification('Media cleared', 'info');
     }
 
-    setWallpaper() {
-        this.showNotification('Wallpaper feature not yet implemented', 'info');
+    async setPiWallpaper() {
+        try {
+            const mediaDisplay = document.getElementById('media-display');
+            const img = mediaDisplay.querySelector('img');
+            const video = mediaDisplay.querySelector('video');
+            
+            if (!img && !video) {
+                this.showNotification('Please upload an image or video first', 'warning');
+                return;
+            }
+            
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            // Get the file from the media display
+            let file;
+            if (img) {
+                // Convert image to blob
+                const response = await fetch(img.src);
+                file = await response.blob();
+            } else {
+                // Convert video to blob
+                const response = await fetch(video.src);
+                file = await response.blob();
+            }
+            
+            // Upload to Pi
+            const formData = new FormData();
+            formData.append('file', file, `wallpaper.${img ? 'jpg' : 'mp4'}`);
+            formData.append('type', img ? 'image' : 'video');
+            
+            const uploadResponse = await fetch(`${apiUrl}/api/pi/wallpaper/upload`, {
+                method: 'POST',
+                headers: { 'X-API-Key': apiKey },
+                body: formData
+            });
+            
+            if (uploadResponse.ok) {
+                this.showNotification('Pi wallpaper uploaded successfully!', 'success');
+            } else {
+                throw new Error('Failed to upload wallpaper to Pi');
+            }
+  } catch (error) {
+            console.error('Error setting Pi wallpaper:', error);
+            this.showNotification('Failed to set Pi wallpaper', 'error');
+        }
     }
 
     // WiFi Functions
@@ -744,9 +789,9 @@ class EchoDashboard {
         
         if (networks.length === 0) {
             wifiList.innerHTML = '<div class="network-item"><div class="network-info"><div class="network-name">No networks found</div></div></div>';
-            return;
-        }
-
+    return;
+  }
+  
         networks.forEach(network => {
             const networkItem = document.createElement('div');
             networkItem.className = 'network-item';

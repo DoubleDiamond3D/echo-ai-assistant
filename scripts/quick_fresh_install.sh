@@ -73,3 +73,4 @@ else
     echo "❌ Installation failed. Check logs: sudo journalctl -u echo_web.service -f"
     exit 1
 fi
+

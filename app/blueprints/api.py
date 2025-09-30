@@ -677,6 +677,87 @@ def connect_bluetooth() -> Response:
 
 
 # =============================================================================
+# PI WALLPAPER ENDPOINTS
+# =============================================================================
+
+@api_bp.post("/pi/wallpaper/upload")
+@require_api_key
+def upload_pi_wallpaper() -> Response:
+    """Upload wallpaper for Pi display"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        file_type = request.form.get('type', 'image')
+        
+        # Create wallpaper directory if it doesn't exist
+        wallpaper_dir = "/opt/echo-ai/wallpapers"
+        os.makedirs(wallpaper_dir, exist_ok=True)
+        
+        # Save the file
+        if file_type == 'image':
+            filename = "wallpaper.jpg"
+        else:
+            filename = "wallpaper.mp4"
+        
+        file_path = os.path.join(wallpaper_dir, filename)
+        file.save(file_path)
+        
+        # Update settings to remember wallpaper
+        settings = current_app.config.get("settings")
+        if hasattr(settings, 'pi_wallpaper'):
+            settings.pi_wallpaper = file_path
+        else:
+            setattr(settings, 'pi_wallpaper', file_path)
+        
+        return jsonify({"ok": True, "message": f"Wallpaper saved as {filename}", "path": file_path})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.get("/pi/wallpaper/current")
+@require_api_key
+def get_current_pi_wallpaper() -> Response:
+    """Get current Pi wallpaper info"""
+    try:
+        settings = current_app.config.get("settings")
+        wallpaper_path = getattr(settings, 'pi_wallpaper', None)
+        
+        if wallpaper_path and os.path.exists(wallpaper_path):
+            return jsonify({
+                "has_wallpaper": True,
+                "path": wallpaper_path,
+                "type": "video" if wallpaper_path.endswith('.mp4') else "image"
+            })
+        else:
+            return jsonify({"has_wallpaper": False})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.delete("/pi/wallpaper")
+@require_api_key
+def remove_pi_wallpaper() -> Response:
+    """Remove current Pi wallpaper"""
+    try:
+        settings = current_app.config.get("settings")
+        wallpaper_path = getattr(settings, 'pi_wallpaper', None)
+        
+        if wallpaper_path and os.path.exists(wallpaper_path):
+            os.remove(wallpaper_path)
+            setattr(settings, 'pi_wallpaper', None)
+            return jsonify({"ok": True, "message": "Wallpaper removed"})
+        else:
+            return jsonify({"ok": True, "message": "No wallpaper to remove"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+# =============================================================================
 # SYSTEM ENDPOINTS
 # =============================================================================
 

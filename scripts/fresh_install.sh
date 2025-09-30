@@ -205,3 +205,4 @@ echo "📚 For help, see the documentation in the docs/ folder"
 echo ""
 
 success "Installation completed successfully!"
+

@@ -389,3 +389,4 @@ struct EthernetView: View {
     NetworkView()
         .environmentObject(EchoService())
 }
+

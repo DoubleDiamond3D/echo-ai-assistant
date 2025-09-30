@@ -472,3 +472,4 @@ struct ShareSheet: UIViewControllerRepresentable {
     MediaView()
         .environmentObject(EchoService())
 }
+
