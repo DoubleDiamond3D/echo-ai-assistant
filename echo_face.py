@@ -112,26 +112,91 @@ def main() -> None:
     state_path = settings.data_dir / "echo_state.json"
     state_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Initialize pygame with error handling
+    try:
+        pygame.init()
+        print("Pygame initialized successfully")
+    except Exception as e:
+        print(f"Failed to initialize pygame: {e}")
+        return
+
+    # Try different display modes with fallbacks
     fullscreen = os.environ.get("ECHO_FACE_FULLSCREEN", "1") == "1"
-    pygame.init()
-    flags = pygame.FULLSCREEN if fullscreen else 0
     size = (800, 480)
-    screen = pygame.display.set_mode(size, flags)
+    screen = None
+    
+    # Try different display modes
+    display_modes = []
+    if fullscreen:
+        display_modes = [
+            (size, pygame.FULLSCREEN),
+            (size, 0),  # Windowed fallback
+        ]
+    else:
+        display_modes = [
+            (size, 0),
+        ]
+    
+    for mode_size, mode_flags in display_modes:
+        try:
+            screen = pygame.display.set_mode(mode_size, mode_flags)
+            print(f"Display mode set: {mode_size}, flags: {mode_flags}")
+            break
+        except Exception as e:
+            print(f"Failed to set display mode {mode_size} with flags {mode_flags}: {e}")
+            continue
+    
+    if screen is None:
+        print("Failed to initialize any display mode. Exiting.")
+        pygame.quit()
+        return
+    
     pygame.display.set_caption("Project Echo Face")
     clock = pygame.time.Clock()
 
     running = True
-    while running:
-        now = time.time()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+    frame_count = 0
+    last_state_check = 0
+    
+    print("Starting face renderer main loop...")
+    
+    try:
+        while running:
+            now = time.time()
+            
+            # Handle events (but don't block if no events)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+            
+            # Only update state every 10 frames to reduce file I/O
+            if frame_count % 10 == 0:
+                state = load_state(state_path)
+                current_mood = state.get("state", "idle")
+            else:
+                current_mood = "idle"  # Default fallback
+            
+            # Draw the face
+            draw_face(screen, current_mood, now)
+            pygame.display.flip()
+            
+            # Limit to 30 FPS to reduce CPU usage
+            clock.tick(30)
+            frame_count += 1
+            
+            # Safety check - exit after 1 hour to prevent memory leaks
+            if frame_count > 30 * 60 * 60:  # 30 FPS * 60 seconds * 60 minutes
+                print("Safety timeout reached. Restarting...")
                 running = False
-        state = load_state(state_path)
-        draw_face(screen, state.get("state", "idle"), now)
-        pygame.display.flip()
-        clock.tick(60)
-
-    pygame.quit()
+                
+    except Exception as e:
+        print(f"Error in main loop: {e}")
+    finally:
+        print("Cleaning up pygame...")
+        pygame.quit()
 
 
 if __name__ == "__main__":
