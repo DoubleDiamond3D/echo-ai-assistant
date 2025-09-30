@@ -708,13 +708,6 @@ def upload_pi_wallpaper() -> Response:
         file_path = os.path.join(wallpaper_dir, filename)
         file.save(file_path)
         
-        # Update settings to remember wallpaper
-        settings = current_app.config.get("settings")
-        if hasattr(settings, 'pi_wallpaper'):
-            settings.pi_wallpaper = file_path
-        else:
-            setattr(settings, 'pi_wallpaper', file_path)
-        
         return jsonify({"ok": True, "message": f"Wallpaper saved as {filename}", "path": file_path})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
