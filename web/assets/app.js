@@ -5,6 +5,8 @@ class EchoDashboard {
     constructor() {
         this.isConnected = false;
         this.settings = this.loadSettings();
+        this.cameraActive = false;
+        this.recording = false;
         this.init();
     }
 
@@ -13,6 +15,8 @@ class EchoDashboard {
         this.startStatusUpdates();
         this.loadSettings();
         this.updateUI();
+        // Start with disconnected status
+        this.updateConnectionStatus(false);
     }
 
     setupEventListeners() {
@@ -607,6 +611,82 @@ class EchoDashboard {
             console.error('Error creating backup:', error);
             this.showNotification('Failed to create backup', 'error');
         }
+    }
+
+    // Status Update Functions
+    startStatusUpdates() {
+        // Update status every 5 seconds
+        setInterval(() => {
+            this.updateStatus();
+        }, 5000);
+
+        // Initial update
+        this.updateStatus();
+    }
+
+    async updateStatus() {
+        try {
+            const response = await fetch('/api/status', {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': 'web-interface'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get status');
+            }
+
+            const data = await response.json();
+            this.updateStatusDisplay(data);
+            this.updateConnectionStatus(true);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            this.updateConnectionStatus(false);
+            // Set default values when disconnected
+            this.updateStatusDisplay({
+                uptime: 0,
+                cpu_usage: 0,
+                memory_usage: 0,
+                temperature: 0
+            });
+        }
+    }
+
+    updateStatusDisplay(data) {
+        // Update status cards
+        if (document.getElementById('uptime')) {
+            document.getElementById('uptime').textContent = this.formatUptime(data.uptime || 0);
+        }
+        if (document.getElementById('cpu-usage')) {
+            document.getElementById('cpu-usage').textContent = `${Math.round(data.cpu_usage || 0)}%`;
+        }
+        if (document.getElementById('memory-usage')) {
+            document.getElementById('memory-usage').textContent = `${Math.round(data.memory_usage || 0)}%`;
+        }
+        if (document.getElementById('temperature')) {
+            document.getElementById('temperature').textContent = `${Math.round(data.temperature || 0)}°C`;
+        }
+    }
+
+    updateConnectionStatus(connected) {
+        this.isConnected = connected;
+        const statusDot = document.querySelector('.status-dot');
+        const statusText = document.getElementById('connection-status');
+        
+        if (statusDot) {
+            statusDot.className = `status-dot ${connected ? 'connected' : 'disconnected'}`;
+        }
+        if (statusText) {
+            statusText.textContent = connected ? 'Connected' : 'Disconnected';
+        }
+    }
+
+    formatUptime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
     showNotification(message, type = 'info') {
