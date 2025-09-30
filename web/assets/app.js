@@ -20,19 +20,32 @@ class EchoDashboard {
         const showAdvancedBtn = document.getElementById('show-advanced');
         const closeAdvancedBtn = document.getElementById('close-advanced');
         const advancedSettings = document.getElementById('advanced-settings');
+        const quickSettingsBtn = document.getElementById('quick-settings-btn');
 
         if (showAdvancedBtn && advancedSettings) {
             showAdvancedBtn.addEventListener('click', () => {
-                advancedSettings.style.display = 'block';
-                advancedSettings.scrollIntoView({ behavior: 'smooth' });
+                this.showAdvancedSettings();
+            });
+        }
+
+        if (quickSettingsBtn && advancedSettings) {
+            quickSettingsBtn.addEventListener('click', () => {
+                this.showAdvancedSettings();
             });
         }
 
         if (closeAdvancedBtn && advancedSettings) {
             closeAdvancedBtn.addEventListener('click', () => {
-                advancedSettings.style.display = 'none';
+                this.hideAdvancedSettings();
             });
         }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                this.hideAdvancedSettings();
+            }
+        });
 
         // Save Settings
         const saveSettingsBtn = document.getElementById('save-settings');
@@ -41,6 +54,95 @@ class EchoDashboard {
                 this.saveSettings();
                 this.showNotification('Settings saved successfully!', 'success');
             });
+        }
+
+        // Camera Controls
+        const cameraToggle = document.getElementById('camera-toggle');
+        const cameraCapture = document.getElementById('camera-capture');
+        const cameraRecord = document.getElementById('camera-record');
+        const takePhoto = document.getElementById('take-photo');
+        const startRecording = document.getElementById('start-recording');
+        const stopRecording = document.getElementById('stop-recording');
+
+        if (cameraToggle) {
+            cameraToggle.addEventListener('click', () => this.toggleCamera());
+        }
+        if (cameraCapture || takePhoto) {
+            (cameraCapture || takePhoto).addEventListener('click', () => this.capturePhoto());
+        }
+        if (cameraRecord || startRecording) {
+            (cameraRecord || startRecording).addEventListener('click', () => this.toggleRecording());
+        }
+        if (stopRecording) {
+            stopRecording.addEventListener('click', () => this.stopRecording());
+        }
+
+        // WiFi Controls
+        const wifiScanBtn = document.getElementById('wifi-scan-btn');
+        const wifiConnectBtn = document.getElementById('wifi-connect');
+        if (wifiScanBtn) {
+            wifiScanBtn.addEventListener('click', () => this.scanWiFiNetworks());
+        }
+        if (wifiConnectBtn) {
+            wifiConnectBtn.addEventListener('click', () => this.connectToWiFi());
+        }
+
+        // Bluetooth Controls
+        const bluetoothScanBtn = document.getElementById('bluetooth-scan-btn');
+        const bluetoothScan = document.getElementById('bluetooth-scan');
+        if (bluetoothScanBtn) {
+            bluetoothScanBtn.addEventListener('click', () => this.scanBluetoothDevices());
+        }
+        if (bluetoothScan) {
+            bluetoothScan.addEventListener('click', () => this.scanBluetoothDevices());
+        }
+
+        // Chat Interface
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage();
+                }
+            });
+        }
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => this.sendMessage());
+        }
+
+        // Voice Controls
+        const voiceToggle = document.getElementById('voice-enabled');
+        const wakeWordToggle = document.getElementById('wake-word-enabled');
+        if (voiceToggle) {
+            voiceToggle.addEventListener('change', (e) => {
+                this.settings.voiceEnabled = e.target.checked;
+                this.updateVoiceUI();
+            });
+        }
+        if (wakeWordToggle) {
+            wakeWordToggle.addEventListener('change', (e) => {
+                this.settings.wakeWordEnabled = e.target.checked;
+                this.updateWakeWordUI();
+            });
+        }
+
+        // Media Upload
+        const mediaInput = document.getElementById('media-upload');
+        if (mediaInput) {
+            mediaInput.addEventListener('change', (e) => {
+                this.handleMediaUpload(e.target.files[0]);
+            });
+        }
+
+        // System Controls
+        const restartBtn = document.getElementById('restart-system');
+        const backupBtn = document.getElementById('create-backup');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => this.restartSystem());
+        }
+        if (backupBtn) {
+            backupBtn.addEventListener('click', () => this.createBackup());
         }
     }
 
@@ -172,6 +274,338 @@ class EchoDashboard {
         const wakeWordSettings = document.querySelector('.wake-word-settings');
         if (wakeWordSettings) {
             wakeWordSettings.style.display = this.settings.wakeWordEnabled ? 'block' : 'none';
+        }
+    }
+
+    showAdvancedSettings() {
+        const advancedSettings = document.getElementById('advanced-settings');
+        if (advancedSettings) {
+            // Create modal overlay if it doesn't exist
+            let overlay = document.querySelector('.modal-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                document.body.appendChild(overlay);
+            }
+            
+            overlay.classList.add('show');
+            advancedSettings.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    hideAdvancedSettings() {
+        const advancedSettings = document.getElementById('advanced-settings');
+        const overlay = document.querySelector('.modal-overlay');
+        
+        if (advancedSettings) {
+            advancedSettings.style.display = 'none';
+        }
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+        document.body.style.overflow = 'auto';
+    }
+
+    // Camera Functions
+    async toggleCamera() {
+        const cameraToggle = document.getElementById('camera-toggle');
+        const cameraFeed = document.getElementById('camera-feed');
+        
+        if (this.cameraActive) {
+            this.stopCamera();
+            cameraToggle.textContent = 'Start Camera';
+            this.cameraActive = false;
+        } else {
+            await this.startCamera();
+            cameraToggle.textContent = 'Stop Camera';
+            this.cameraActive = true;
+        }
+    }
+
+    async startCamera() {
+        try {
+            const response = await fetch('/api/camera/start', {
+                method: 'POST',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                const cameraFeed = document.getElementById('camera-feed');
+                cameraFeed.innerHTML = `
+                    <img src="/api/camera/feed" alt="Live Camera Feed" class="live-feed">
+                    <div class="camera-overlay">
+                        <div class="recording-indicator" id="recording-indicator" style="display: none;">🔴 REC</div>
+                    </div>
+                `;
+                this.showNotification('Camera started successfully!', 'success');
+            } else {
+                throw new Error('Failed to start camera');
+            }
+        } catch (error) {
+            console.error('Error starting camera:', error);
+            this.showNotification('Failed to start camera', 'error');
+        }
+    }
+
+    stopCamera() {
+        const cameraFeed = document.getElementById('camera-feed');
+        cameraFeed.innerHTML = `
+            <div class="camera-placeholder">
+                <div class="camera-icon">📹</div>
+                <p>Camera stopped</p>
+            </div>
+        `;
+        this.showNotification('Camera stopped', 'info');
+    }
+
+    async capturePhoto() {
+        try {
+            const response = await fetch('/api/camera/capture', {
+                method: 'POST',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                this.showNotification('Photo captured successfully!', 'success');
+                this.refreshMediaGallery();
+            } else {
+                throw new Error('Failed to capture photo');
+            }
+        } catch (error) {
+            console.error('Error capturing photo:', error);
+            this.showNotification('Failed to capture photo', 'error');
+        }
+    }
+
+    async toggleRecording() {
+        const cameraRecord = document.getElementById('camera-record');
+        const recordingIndicator = document.getElementById('recording-indicator');
+        
+        if (this.recording) {
+            await this.stopRecording();
+            cameraRecord.textContent = '🔴';
+            if (recordingIndicator) recordingIndicator.style.display = 'none';
+        } else {
+            await this.startRecording();
+            cameraRecord.textContent = '⏹️';
+            if (recordingIndicator) recordingIndicator.style.display = 'block';
+        }
+    }
+
+    async startRecording() {
+        try {
+            const response = await fetch('/api/camera/recording/start', {
+                method: 'POST',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                this.recording = true;
+                this.showNotification('Recording started', 'info');
+            } else {
+                throw new Error('Failed to start recording');
+            }
+        } catch (error) {
+            console.error('Error starting recording:', error);
+            this.showNotification('Failed to start recording', 'error');
+        }
+    }
+
+    async stopRecording() {
+        try {
+            const response = await fetch('/api/camera/recording/stop', {
+                method: 'POST',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                this.recording = false;
+                this.showNotification('Recording stopped', 'info');
+            } else {
+                throw new Error('Failed to stop recording');
+            }
+        } catch (error) {
+            console.error('Error stopping recording:', error);
+            this.showNotification('Failed to stop recording', 'error');
+        }
+    }
+
+    // WiFi Functions
+    async scanWiFiNetworks() {
+        try {
+            this.showNotification('Scanning for WiFi networks...', 'info');
+            const response = await fetch('/api/wifi/scan', {
+                method: 'GET',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.updateWiFiNetworks(data.networks || []);
+                this.showNotification('WiFi scan completed', 'success');
+            } else {
+                throw new Error('Failed to scan WiFi networks');
+            }
+        } catch (error) {
+            console.error('Error scanning WiFi:', error);
+            this.showNotification('Failed to scan WiFi networks', 'error');
+        }
+    }
+
+    updateWiFiNetworks(networks) {
+        const wifiList = document.getElementById('wifi-networks');
+        if (!wifiList) return;
+
+        wifiList.innerHTML = '';
+        networks.forEach(network => {
+            const networkDiv = document.createElement('div');
+            networkDiv.className = 'network-item';
+            networkDiv.innerHTML = `
+                <div class="network-info">
+                    <span class="network-name">${network.ssid}</span>
+                    <span class="network-details">${network.security} • ${network.signal}%</span>
+                </div>
+                <button class="btn btn-sm" onclick="echoDashboard.connectToWiFi('${network.ssid}')">
+                    Connect
+                </button>
+            `;
+            wifiList.appendChild(networkDiv);
+        });
+    }
+
+    async connectToWiFi(ssid, password = '') {
+        if (!password) {
+            password = prompt(`Enter password for "${ssid}":`);
+            if (!password) return;
+        }
+
+        try {
+            const response = await fetch('/api/wifi/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'web-interface'
+                },
+                body: JSON.stringify({ ssid, password })
+            });
+            
+            if (response.ok) {
+                this.showNotification(`Connecting to ${ssid}...`, 'info');
+            } else {
+                throw new Error('Failed to connect to WiFi');
+            }
+        } catch (error) {
+            console.error('Error connecting to WiFi:', error);
+            this.showNotification('Failed to connect to WiFi', 'error');
+        }
+    }
+
+    // Bluetooth Functions
+    async scanBluetoothDevices() {
+        try {
+            this.showNotification('Scanning for Bluetooth devices...', 'info');
+            const response = await fetch('/api/bluetooth/scan', {
+                method: 'GET',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.updateBluetoothDevices(data.devices || []);
+                this.showNotification('Bluetooth scan completed', 'success');
+            } else {
+                throw new Error('Failed to scan Bluetooth devices');
+            }
+        } catch (error) {
+            console.error('Error scanning Bluetooth:', error);
+            this.showNotification('Failed to scan Bluetooth devices', 'error');
+        }
+    }
+
+    updateBluetoothDevices(devices) {
+        const bluetoothList = document.getElementById('bluetooth-devices');
+        if (!bluetoothList) return;
+
+        bluetoothList.innerHTML = '';
+        devices.forEach(device => {
+            const deviceDiv = document.createElement('div');
+            deviceDiv.className = 'bluetooth-device';
+            deviceDiv.innerHTML = `
+                <div class="device-info">
+                    <div class="device-icon">${device.icon || '📱'}</div>
+                    <div class="device-details">
+                        <span class="device-name">${device.name}</span>
+                        <span class="device-status">${device.type} • ${device.rssi}dBm</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm" onclick="echoDashboard.connectBluetoothDevice('${device.id}')">
+                    Connect
+                </button>
+            `;
+            bluetoothList.appendChild(deviceDiv);
+        });
+    }
+
+    async connectBluetoothDevice(deviceId) {
+        try {
+            const response = await fetch('/api/bluetooth/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'web-interface'
+                },
+                body: JSON.stringify({ deviceId })
+            });
+            
+            if (response.ok) {
+                this.showNotification('Device connected successfully!', 'success');
+            } else {
+                throw new Error('Failed to connect to device');
+            }
+        } catch (error) {
+            console.error('Error connecting device:', error);
+            this.showNotification('Failed to connect to device', 'error');
+        }
+    }
+
+    // System Functions
+    async restartSystem() {
+        if (confirm('Are you sure you want to restart the system?')) {
+            try {
+                const response = await fetch('/api/system/restart', {
+                    method: 'POST',
+                    headers: { 'X-API-Key': 'web-interface' }
+                });
+                
+                if (response.ok) {
+                    this.showNotification('System restarting...', 'info');
+                } else {
+                    throw new Error('Failed to restart system');
+                }
+            } catch (error) {
+                console.error('Error restarting system:', error);
+                this.showNotification('Failed to restart system', 'error');
+            }
+        }
+    }
+
+    async createBackup() {
+        try {
+            this.showNotification('Creating backup...', 'info');
+            const response = await fetch('/api/backup/create', {
+                method: 'POST',
+                headers: { 'X-API-Key': 'web-interface' }
+            });
+            
+            if (response.ok) {
+                this.showNotification('Backup created successfully!', 'success');
+            } else {
+                throw new Error('Failed to create backup');
+            }
+        } catch (error) {
+            console.error('Error creating backup:', error);
+            this.showNotification('Failed to create backup', 'error');
         }
     }
 

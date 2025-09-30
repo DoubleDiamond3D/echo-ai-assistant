@@ -790,6 +790,135 @@ body::before {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Top Controls Bar */
+.top-controls {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.camera-section {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.camera-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.camera-controls {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.camera-feed {
+  position: relative;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-placeholder {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.camera-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.live-feed {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.camera-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.recording-indicator {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.quick-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.quick-settings .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Advanced Settings Modal */
+#advanced-settings {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1000;
+  margin: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+#advanced-settings .dashboard-grid {
+  display: block;
+}
+
+#advanced-settings .form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 999;
+  display: none;
+}
+
+.modal-overlay.show {
+  display: block;
+}
+
 /* Mobile Notifications */
 @media (max-width: 768px) {
   .notification {
@@ -800,5 +929,25 @@ body::before {
   
   .notification.show {
     transform: translateY(0);
+  }
+  
+  .top-controls {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .quick-settings {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .quick-settings .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  #advanced-settings {
+    width: 95%;
+    max-height: 90vh;
   }
 }
