@@ -40,7 +40,11 @@ apt-get install -y \
   python3-gpiozero python3-rpi.gpio \
   build-essential cmake pkg-config \
   portaudio19-dev python3-pyaudio \
-  ca-certificates gnupg
+  ca-certificates gnupg \
+  libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+  libfreetype6-dev libjpeg-dev libpng-dev libtiff5-dev \
+  libx11-dev libxext-dev libxrender-dev libxrandr-dev \
+  libasound2-dev libpulse-dev
 
 echo "🔧 Setting up audio..."
 # Enable audio
