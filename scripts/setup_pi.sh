@@ -117,9 +117,9 @@ EOF
 chmod +x /usr/local/bin/echo-wifi-setup
 
 echo "🖥️  Setting up display permissions..."
-# Create autostart entry for X11 permissions
-mkdir -p /home/pi/.config/autostart
-cat > /home/pi/.config/autostart/echo-display-permission.desktop << 'EOF'
+# Create autostart entry for X11 permissions in echo user's home directory
+mkdir -p /home/echo/.config/autostart
+cat > /home/echo/.config/autostart/echo-display-permission.desktop << 'EOF'
 [Desktop Entry]
 Type=Application
 Name=Echo Display Permission
@@ -130,12 +130,11 @@ X-GNOME-Autostart-enabled=true
 EOF
 
 # Set proper ownership
-chown pi:pi /home/pi/.config/autostart/echo-display-permission.desktop
+chown echo:echo /home/echo/.config/autostart/echo-display-permission.desktop
 
-# Also create for echo user if it has a home directory
-if [[ -d "/home/echo" ]]; then
-  mkdir -p /home/echo/.config/autostart
-  cat > /home/echo/.config/autostart/echo-display-permission.desktop << 'EOF'
+# Also create in /etc/xdg/autostart for system-wide autostart
+mkdir -p /etc/xdg/autostart
+cat > /etc/xdg/autostart/echo-display-permission.desktop << 'EOF'
 [Desktop Entry]
 Type=Application
 Name=Echo Display Permission
@@ -144,8 +143,6 @@ Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 EOF
-  chown echo:echo /home/echo/.config/autostart/echo-display-permission.desktop
-fi
 
 # Set X11 permissions immediately
 xhost +SI:localuser:echo 2>/dev/null || true
