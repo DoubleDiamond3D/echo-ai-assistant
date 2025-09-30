@@ -146,6 +146,32 @@ class EchoDashboard {
             });
         }
 
+        // Voice Controls
+        const voiceInputToggle = document.getElementById('voice-input-enabled');
+        const wakeWordToggle = document.getElementById('wake-word-enabled');
+        const voiceOutputToggle = document.getElementById('voice-output-enabled');
+        
+        if (voiceInputToggle) {
+            voiceInputToggle.addEventListener('change', () => {
+                this.settings.voiceEnabled = voiceInputToggle.checked;
+                this.toggleVoice();
+            });
+        }
+        
+        if (wakeWordToggle) {
+            wakeWordToggle.addEventListener('change', () => {
+                this.settings.wakeWordEnabled = wakeWordToggle.checked;
+                this.toggleWakeWord();
+            });
+        }
+        
+        if (voiceOutputToggle) {
+            voiceOutputToggle.addEventListener('change', () => {
+                this.settings.voiceOutputEnabled = voiceOutputToggle.checked;
+                this.saveSettings();
+            });
+        }
+
         // System Controls
         const restartBtn = document.getElementById('restart-system');
         const backupBtn = document.getElementById('create-backup');
@@ -160,6 +186,7 @@ class EchoDashboard {
     loadSettings() {
         const defaultSettings = {
             voiceEnabled: true,
+            voiceOutputEnabled: true,
             wakeWordEnabled: true,
             wakeWordSensitivity: 0.7,
             voiceSpeed: 1.0,
@@ -189,7 +216,8 @@ class EchoDashboard {
 
     saveSettings() {
         // Get all form values
-        this.settings.voiceEnabled = document.getElementById('voice-enabled')?.checked || false;
+        this.settings.voiceEnabled = document.getElementById('voice-input-enabled')?.checked || false;
+        this.settings.voiceOutputEnabled = document.getElementById('voice-output-enabled')?.checked || false;
         this.settings.wakeWordEnabled = document.getElementById('wake-word-enabled')?.checked || false;
         this.settings.wakeWordSensitivity = parseFloat(document.getElementById('wake-word-sensitivity')?.value || 0.7);
         this.settings.voiceSpeed = parseFloat(document.getElementById('voice-speed')?.value || 1.0);
@@ -250,10 +278,10 @@ class EchoDashboard {
             
             if (response.ok) {
                 results.echoAI = { status: 'success', message: 'Echo AI connected successfully!' };
-            } else {
+    } else {
                 results.echoAI = { status: 'error', message: `Echo AI returned status: ${response.status}` };
-            }
-        } catch (error) {
+    }
+  } catch (error) {
             results.echoAI = { status: 'error', message: `Echo AI connection failed: ${error.message}` };
         }
 
@@ -273,7 +301,7 @@ class EchoDashboard {
                 } else {
                     results.openai = { status: 'error', message: `OpenAI API error: ${response.status}` };
                 }
-            } catch (error) {
+  } catch (error) {
                 results.openai = { status: 'error', message: `OpenAI API test failed: ${error.message}` };
             }
         } else {
@@ -302,7 +330,7 @@ class EchoDashboard {
                 } else {
                     results.anthropic = { status: 'error', message: `Anthropic API error: ${response.status}` };
                 }
-            } catch (error) {
+  } catch (error) {
                 results.anthropic = { status: 'error', message: `Anthropic API test failed: ${error.message}` };
             }
         } else {
@@ -318,10 +346,10 @@ class EchoDashboard {
                 
                 if (response.ok) {
                     results.ollama = { status: 'success', message: 'Ollama server is running!' };
-                } else {
+    } else {
                     results.ollama = { status: 'error', message: `Ollama server error: ${response.status}` };
-                }
-            } catch (error) {
+    }
+  } catch (error) {
                 results.ollama = { status: 'error', message: `Ollama connection failed: ${error.message}` };
             }
         } else {
@@ -345,7 +373,7 @@ class EchoDashboard {
                 } else {
                     results.cloudflare = { status: 'error', message: `Cloudflare API error: ${response.status}` };
                 }
-            } catch (error) {
+  } catch (error) {
                 results.cloudflare = { status: 'error', message: `Cloudflare test failed: ${error.message}` };
             }
         } else {
@@ -405,7 +433,7 @@ class EchoDashboard {
             await this.scanBluetoothDevices();
             
             this.showNotification('Services refreshed successfully!', 'success');
-        } catch (error) {
+  } catch (error) {
             console.error('Error refreshing services:', error);
             this.showNotification('Some services failed to refresh', 'warning');
         }
@@ -425,7 +453,7 @@ class EchoDashboard {
                 const media = await response.json();
                 this.updateMediaGallery(media);
             }
-        } catch (error) {
+  } catch (error) {
             console.error('Error refreshing media gallery:', error);
         }
     }
@@ -447,16 +475,16 @@ class EchoDashboard {
                         <div class="media-info">
                             <span class="media-name">${item.name}</span>
                             <button class="btn btn-sm btn-danger" onclick="this.removeMedia('${item.id}')">Remove</button>
-                        </div>
-                    `;
+        </div>
+    `;
                 } else if (item.type === 'video') {
                     mediaItem.innerHTML = `
                         <video src="${item.url}" class="media-preview" controls></video>
                         <div class="media-info">
                             <span class="media-name">${item.name}</span>
                             <button class="btn btn-sm btn-danger" onclick="this.removeMedia('${item.id}')">Remove</button>
-                        </div>
-                    `;
+      </div>
+    `;
                 }
                 
                 gallery.appendChild(mediaItem);
@@ -471,28 +499,47 @@ class EchoDashboard {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
             
+            // Prepare settings payload for the server
+            const settingsPayload = {
+                voice_enabled: this.settings.voiceEnabled,
+                voice_output_enabled: this.settings.voiceOutputEnabled,
+                wake_word_enabled: this.settings.wakeWordEnabled,
+                camera_enabled: true, // Always enable camera
+                ai_service: this.settings.openaiKey ? 'openai' : (this.settings.anthropicKey ? 'anthropic' : 'ollama'),
+                openai_key: this.settings.openaiKey,
+                anthropic_key: this.settings.anthropicKey,
+                ollama_url: this.settings.ollamaUrl
+            };
+            
             const response = await fetch(`${apiUrl}/api/settings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify(this.settings)
+                body: JSON.stringify(settingsPayload)
             });
 
             if (!response.ok) {
-                throw new Error('Failed to save settings');
+                throw new Error(`Failed to save settings: ${response.status}`);
             }
-        } catch (error) {
+            
+            const result = await response.json();
+            console.log('Settings saved to server:', result);
+            
+  } catch (error) {
             console.error('Error saving settings:', error);
-            this.showNotification('Failed to save settings to server', 'error');
+            this.showNotification(`Failed to save settings to server: ${error.message}`, 'error');
         }
     }
 
     updateUI() {
         // Update form values
-        if (document.getElementById('voice-enabled')) {
-            document.getElementById('voice-enabled').checked = this.settings.voiceEnabled;
+        if (document.getElementById('voice-input-enabled')) {
+            document.getElementById('voice-input-enabled').checked = this.settings.voiceEnabled;
+        }
+        if (document.getElementById('voice-output-enabled')) {
+            document.getElementById('voice-output-enabled').checked = this.settings.voiceOutputEnabled;
         }
         if (document.getElementById('wake-word-enabled')) {
             document.getElementById('wake-word-enabled').checked = this.settings.wakeWordEnabled;
@@ -555,6 +602,90 @@ class EchoDashboard {
         }
     }
 
+    // Voice Control Functions
+    async toggleVoice() {
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            if (this.settings.voiceEnabled) {
+                // Stop voice input
+                const response = await fetch(`${apiUrl}/api/voice/stop`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+                
+                if (response.ok) {
+                    this.settings.voiceEnabled = false;
+                    this.showNotification('Voice input stopped', 'info');
+                } else {
+                    throw new Error('Failed to stop voice input');
+                }
+            } else {
+                // Start voice input
+                const response = await fetch(`${apiUrl}/api/voice/start`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+                
+                if (response.ok) {
+                    this.settings.voiceEnabled = true;
+                    this.showNotification('Voice input started', 'success');
+                } else {
+                    throw new Error('Failed to start voice input');
+                }
+            }
+            
+            this.updateVoiceUI();
+            this.saveSettings();
+  } catch (error) {
+            console.error('Error toggling voice:', error);
+            this.showNotification(`Voice control error: ${error.message}`, 'error');
+        }
+    }
+
+    // Wake Word Control Functions
+    async toggleWakeWord() {
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            if (this.settings.wakeWordEnabled) {
+                // Stop wake word detection
+                const response = await fetch(`${apiUrl}/api/wake-word/stop`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+                
+                if (response.ok) {
+                    this.settings.wakeWordEnabled = false;
+                    this.showNotification('Wake word detection stopped', 'info');
+                } else {
+                    throw new Error('Failed to stop wake word detection');
+                }
+            } else {
+                // Start wake word detection
+                const response = await fetch(`${apiUrl}/api/wake-word/start`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+                
+                if (response.ok) {
+                    this.settings.wakeWordEnabled = true;
+                    this.showNotification('Wake word detection started', 'success');
+                } else {
+                    throw new Error('Failed to start wake word detection');
+                }
+            }
+            
+            this.updateWakeWordUI();
+            this.saveSettings();
+  } catch (error) {
+            console.error('Error toggling wake word:', error);
+            this.showNotification(`Wake word control error: ${error.message}`, 'error');
+        }
+    }
+
     showAdvancedSettings() {
         const advancedSettings = document.getElementById('advanced-settings');
         if (advancedSettings) {
@@ -603,35 +734,64 @@ class EchoDashboard {
 
     async startCamera() {
         try {
-            const response = await fetch('/api/camera/start', {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            // Start camera service on Echo AI
+            const response = await fetch(`${apiUrl}/api/cameras/start`, {
                 method: 'POST',
-                headers: { 'X-API-Key': 'web-interface' }
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
+                body: JSON.stringify({ name: 'head' })
             });
             
             if (response.ok) {
                 const cameraFeed = document.getElementById('camera-feed');
                 cameraFeed.innerHTML = `
-                    <img src="/api/camera/feed" alt="Live Camera Feed" class="live-feed">
+                    <img src="${apiUrl}/stream/camera/head" alt="Live Camera Feed" class="live-feed">
                     <div class="camera-overlay">
                         <div class="recording-indicator" id="recording-indicator" style="display: none;">🔴 REC</div>
                     </div>
                 `;
                 this.showNotification('Camera started successfully!', 'success');
             } else {
-                throw new Error('Failed to start camera');
+                throw new Error(`Failed to start camera: ${response.status}`);
             }
-        } catch (error) {
+  } catch (error) {
             console.error('Error starting camera:', error);
-            this.showNotification('Failed to start camera', 'error');
+            this.showNotification(`Failed to start camera: ${error.message}`, 'error');
         }
     }
 
-    stopCamera() {
+    async stopCamera() {
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            // Stop camera service on Echo AI
+            const response = await fetch(`${apiUrl}/api/cameras/stop`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
+                body: JSON.stringify({ name: 'head' })
+            });
+            
+            if (!response.ok) {
+                console.warn(`Failed to stop camera service: ${response.status}`);
+            }
+  } catch (error) {
+            console.warn('Error stopping camera service:', error);
+        }
+        
         const cameraFeed = document.getElementById('camera-feed');
         cameraFeed.innerHTML = `
             <div class="camera-placeholder">
                 <div class="camera-icon">📹</div>
-                <p>Camera stopped</p>
+                <p>Click "Start Camera" to begin live feed</p>
             </div>
         `;
         this.showNotification('Camera stopped', 'info');
@@ -650,7 +810,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to capture photo');
             }
-        } catch (error) {
+  } catch (error) {
             console.error('Error capturing photo:', error);
             this.showNotification('Failed to capture photo', 'error');
         }
@@ -684,7 +844,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to start recording');
             }
-        } catch (error) {
+  } catch (error) {
             console.error('Error starting recording:', error);
             this.showNotification('Failed to start recording', 'error');
         }
@@ -702,8 +862,8 @@ class EchoDashboard {
                 this.showNotification('Recording stopped', 'info');
             } else {
                 throw new Error('Failed to stop recording');
-            }
-        } catch (error) {
+    }
+  } catch (error) {
             console.error('Error stopping recording:', error);
             this.showNotification('Failed to stop recording', 'error');
         }
@@ -725,7 +885,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to scan WiFi networks');
             }
-        } catch (error) {
+  } catch (error) {
             console.error('Error scanning WiFi:', error);
             this.showNotification('Failed to scan WiFi networks', 'error');
         }
@@ -794,8 +954,8 @@ class EchoDashboard {
                 this.showNotification('Bluetooth scan completed', 'success');
             } else {
                 throw new Error('Failed to scan Bluetooth devices');
-            }
-        } catch (error) {
+    }
+  } catch (error) {
             console.error('Error scanning Bluetooth:', error);
             this.showNotification('Failed to scan Bluetooth devices', 'error');
         }
@@ -861,7 +1021,7 @@ class EchoDashboard {
                 } else {
                     throw new Error('Failed to restart system');
                 }
-            } catch (error) {
+  } catch (error) {
                 console.error('Error restarting system:', error);
                 this.showNotification('Failed to restart system', 'error');
             }

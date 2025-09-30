@@ -347,3 +347,60 @@ def configure_wake_word_endpoint() -> Response:
         return jsonify({"ok": True, "message": "Wake word configuration updated"})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
+
+
+# =============================================================================
+# SETTINGS ENDPOINTS
+# =============================================================================
+
+@api_bp.get("/settings")
+@require_api_key
+def get_settings() -> Response:
+    """Get current application settings"""
+    try:
+        settings = current_app.config.get("settings")
+        return jsonify({
+            "voice_enabled": settings.voice_input_enabled,
+            "wake_word_enabled": getattr(settings, 'wake_word_enabled', False),
+            "camera_enabled": True,  # Camera is always available
+            "ai_service": getattr(settings, 'ai_service', 'openai'),
+            "openai_key": getattr(settings, 'openai_api_key', ''),
+            "anthropic_key": getattr(settings, 'anthropic_api_key', ''),
+            "ollama_url": getattr(settings, 'ollama_url', 'http://localhost:11434'),
+        })
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/settings")
+@require_api_key
+def update_settings() -> Response:
+    """Update application settings and restart services"""
+    try:
+        payload: Dict[str, Any] | None = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "invalid payload"}), 400
+        
+        # Update voice input service
+        if 'voice_enabled' in payload:
+            voice_service = _svc("voice_input_service")
+            if payload['voice_enabled']:
+                voice_service.start_listening()
+            else:
+                voice_service.stop_listening()
+        
+        # Update wake word service
+        if 'wake_word_enabled' in payload:
+            if payload['wake_word_enabled']:
+                start_wake_word_detection()
+            else:
+                stop_wake_word_detection()
+        
+        # Update camera service
+        if 'camera_enabled' in payload and payload['camera_enabled']:
+            camera_service = _svc("camera_service")
+            camera_service.ensure_started("head")
+        
+        return jsonify({"ok": True, "message": "Settings updated and services restarted"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
