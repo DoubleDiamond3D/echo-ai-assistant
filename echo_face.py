@@ -121,9 +121,13 @@ def main() -> None:
         return
 
     # Try different display modes with fallbacks
-    fullscreen = os.environ.get("ECHO_FACE_FULLSCREEN", "1") == "1"
+    fullscreen = os.environ.get("ECHO_FACE_FULLSCREEN", "0") == "1"
     size = (800, 480)
     screen = None
+    
+    # Get current SDL driver
+    sdl_driver = os.environ.get("SDL_VIDEODRIVER", "auto")
+    print(f"Using SDL driver: {sdl_driver}")
     
     # Try different display modes
     display_modes = []
@@ -140,14 +144,14 @@ def main() -> None:
     for mode_size, mode_flags in display_modes:
         try:
             screen = pygame.display.set_mode(mode_size, mode_flags)
-            print(f"Display mode set: {mode_size}, flags: {mode_flags}")
+            print(f"✅ Display mode set: {mode_size}, flags: {mode_flags}")
             break
         except Exception as e:
-            print(f"Failed to set display mode {mode_size} with flags {mode_flags}: {e}")
+            print(f"❌ Failed to set display mode {mode_size} with flags {mode_flags}: {e}")
             continue
     
     if screen is None:
-        print("Failed to initialize any display mode. Exiting.")
+        print("❌ Failed to initialize any display mode. Exiting.")
         pygame.quit()
         return
     
