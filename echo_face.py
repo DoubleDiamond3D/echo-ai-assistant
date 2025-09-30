@@ -125,30 +125,37 @@ def main() -> None:
     size = (800, 480)
     screen = None
     
-    # Get current SDL driver
-    sdl_driver = os.environ.get("SDL_VIDEODRIVER", "auto")
-    print(f"Using SDL driver: {sdl_driver}")
+    # Try different SDL drivers in order of preference
+    sdl_drivers = ["x11", "fbcon", "dummy"]
+    screen = None
     
-    # Try different display modes
-    display_modes = []
-    if fullscreen:
-        display_modes = [
-            (size, pygame.FULLSCREEN),
-            (size, 0),  # Windowed fallback
-        ]
-    else:
-        display_modes = [
-            (size, 0),
-        ]
-    
-    for mode_size, mode_flags in display_modes:
-        try:
-            screen = pygame.display.set_mode(mode_size, mode_flags)
-            print(f"✅ Display mode set: {mode_size}, flags: {mode_flags}")
+    for driver in sdl_drivers:
+        print(f"Trying SDL driver: {driver}")
+        os.environ['SDL_VIDEODRIVER'] = driver
+        
+        # Try different display modes
+        display_modes = []
+        if fullscreen:
+            display_modes = [
+                (size, pygame.FULLSCREEN),
+                (size, 0),  # Windowed fallback
+            ]
+        else:
+            display_modes = [
+                (size, 0),
+            ]
+        
+        for mode_size, mode_flags in display_modes:
+            try:
+                screen = pygame.display.set_mode(mode_size, mode_flags)
+                print(f"✅ Display mode set: {mode_size}, flags: {mode_flags} with driver: {driver}")
+                break
+            except Exception as e:
+                print(f"❌ Failed to set display mode {mode_size} with flags {mode_flags} using {driver}: {e}")
+                continue
+        
+        if screen is not None:
             break
-        except Exception as e:
-            print(f"❌ Failed to set display mode {mode_size} with flags {mode_flags}: {e}")
-            continue
     
     if screen is None:
         print("❌ Failed to initialize any display mode. Exiting.")
