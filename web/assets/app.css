@@ -705,3 +705,100 @@ body::before {
 .mt-2 { margin-top: var(--spacing-sm); }
 .mt-3 { margin-top: var(--spacing-md); }
 .mt-4 { margin-top: var(--spacing-lg); }
+
+/* Notifications */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.notification-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.notification-info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.notification-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* Form Improvements */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.form-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+}
+
+/* Advanced Settings Styling */
+#advanced-settings {
+  margin-top: var(--spacing-xl);
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+}
+
+#advanced-settings .card-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+#advanced-settings .card-title {
+  color: white;
+}
+
+#advanced-settings .btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#advanced-settings .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile Notifications */
+@media (max-width: 768px) {
+  .notification {
+    right: 10px;
+    left: 10px;
+    transform: translateY(-100%);
+  }
+  
+  .notification.show {
+    transform: translateY(0);
+  }
+}

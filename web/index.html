@@ -293,6 +293,28 @@
                     <input type="password" class="form-input" id="openai-key" placeholder="OpenAI API Key">
                     <input type="password" class="form-input" id="anthropic-key" placeholder="Anthropic API Key">
                     <input type="text" class="form-input" id="ollama-url" placeholder="Ollama Server URL (e.g., http://localhost:11434)">
+                    <input type="password" class="form-input" id="porcupine-key" placeholder="Porcupine Access Key (for wake word)">
+                    <input type="text" class="form-input" id="snowboy-model" placeholder="Snowboy Model Path">
+                    <input type="text" class="form-input" id="vosk-model" placeholder="Vosk Model Path">
+                    <input type="password" class="form-input" id="cloudflare-token" placeholder="Cloudflare Tunnel Token">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Backup Settings</label>
+                    <div class="form-row">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="backup-enabled">
+                            <span class="checkmark"></span>
+                            Enable Auto Backup
+                        </label>
+                    </div>
+                    <select class="form-input" id="backup-frequency">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="save-settings">Save Settings</button>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Cloudflare Tunnel</label>
