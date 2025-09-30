@@ -904,6 +904,37 @@ body::before {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+/* API Status Indicators */
+.api-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.api-status {
+  font-size: 1.2rem;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+.api-status.testing {
+  color: #f59e0b;
+  animation: pulse 1s infinite;
+}
+
+.api-status.success {
+  color: #10b981;
+}
+
+.api-status.error {
+  color: #ef4444;
+}
+
+.api-status.warning {
+  color: #f59e0b;
+}
+
 #advanced-settings .dashboard-grid {
   display: block;
 }

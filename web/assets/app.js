@@ -55,8 +55,15 @@ class EchoDashboard {
         const saveSettingsBtn = document.getElementById('save-settings');
         if (saveSettingsBtn) {
             saveSettingsBtn.addEventListener('click', () => {
-                this.saveSettings();
-                this.showNotification('Settings saved successfully!', 'success');
+                this.saveSettingsAndTest();
+            });
+        }
+
+        // Refresh Services
+        const refreshServicesBtn = document.getElementById('refresh-services');
+        if (refreshServicesBtn) {
+            refreshServicesBtn.addEventListener('click', () => {
+                this.refreshServices();
             });
         }
 
@@ -205,13 +212,270 @@ class EchoDashboard {
         this.sendSettingsToServer();
     }
 
+    async saveSettingsAndTest() {
+        // Save settings first
+        this.saveSettings();
+        
+        // Show testing notification
+        this.showNotification('Testing API connections...', 'info');
+        
+        // Test all APIs
+        const testResults = await this.testAllAPIs();
+        
+        // Show results
+        this.showTestResults(testResults);
+        
+        // Refresh services
+        await this.refreshServices();
+    }
+
+    async testAllAPIs() {
+        const results = {
+            echoAI: { status: 'testing', message: 'Testing Echo AI connection...' },
+            openai: { status: 'testing', message: 'Testing OpenAI API...' },
+            anthropic: { status: 'testing', message: 'Testing Anthropic API...' },
+            ollama: { status: 'testing', message: 'Testing Ollama connection...' },
+            cloudflare: { status: 'testing', message: 'Testing Cloudflare Tunnel...' }
+        };
+
+        // Test Echo AI connection
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/status`, {
+                method: 'GET',
+                headers: { 'X-API-Key': apiKey }
+            });
+            
+            if (response.ok) {
+                results.echoAI = { status: 'success', message: 'Echo AI connected successfully!' };
+            } else {
+                results.echoAI = { status: 'error', message: `Echo AI returned status: ${response.status}` };
+            }
+        } catch (error) {
+            results.echoAI = { status: 'error', message: `Echo AI connection failed: ${error.message}` };
+        }
+
+        // Test OpenAI API
+        if (this.settings.openaiKey) {
+            try {
+                const response = await fetch('https://api.openai.com/v1/models', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.settings.openaiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    results.openai = { status: 'success', message: 'OpenAI API key is valid!' };
+                } else {
+                    results.openai = { status: 'error', message: `OpenAI API error: ${response.status}` };
+                }
+            } catch (error) {
+                results.openai = { status: 'error', message: `OpenAI API test failed: ${error.message}` };
+            }
+        } else {
+            results.openai = { status: 'warning', message: 'OpenAI API key not provided' };
+        }
+
+        // Test Anthropic API
+        if (this.settings.anthropicKey) {
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'x-api-key': this.settings.anthropicKey,
+                        'Content-Type': 'application/json',
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-3-sonnet-20240229',
+                        max_tokens: 10,
+                        messages: [{ role: 'user', content: 'test' }]
+                    })
+                });
+                
+                if (response.ok || response.status === 400) { // 400 is expected for test message
+                    results.anthropic = { status: 'success', message: 'Anthropic API key is valid!' };
+                } else {
+                    results.anthropic = { status: 'error', message: `Anthropic API error: ${response.status}` };
+                }
+            } catch (error) {
+                results.anthropic = { status: 'error', message: `Anthropic API test failed: ${error.message}` };
+            }
+        } else {
+            results.anthropic = { status: 'warning', message: 'Anthropic API key not provided' };
+        }
+
+        // Test Ollama connection
+        if (this.settings.ollamaUrl) {
+            try {
+                const response = await fetch(`${this.settings.ollamaUrl}/api/tags`, {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    results.ollama = { status: 'success', message: 'Ollama server is running!' };
+                } else {
+                    results.ollama = { status: 'error', message: `Ollama server error: ${response.status}` };
+                }
+            } catch (error) {
+                results.ollama = { status: 'error', message: `Ollama connection failed: ${error.message}` };
+            }
+        } else {
+            results.ollama = { status: 'warning', message: 'Ollama URL not provided' };
+        }
+
+        // Test Cloudflare Tunnel
+        if (this.settings.cloudflareToken) {
+            try {
+                // Test if cloudflared is running
+                const response = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.settings.cloudflareToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    results.cloudflare = { status: 'success', message: 'Cloudflare token is valid!' };
+                } else {
+                    results.cloudflare = { status: 'error', message: `Cloudflare API error: ${response.status}` };
+                }
+            } catch (error) {
+                results.cloudflare = { status: 'error', message: `Cloudflare test failed: ${error.message}` };
+            }
+        } else {
+            results.cloudflare = { status: 'warning', message: 'Cloudflare token not provided' };
+        }
+
+        return results;
+    }
+
+    showTestResults(results) {
+        let successCount = 0;
+        let errorCount = 0;
+        let warningCount = 0;
+
+        // Update visual status indicators
+        this.updateAPIStatusIndicators(results);
+
+        Object.values(results).forEach(result => {
+            if (result.status === 'success') successCount++;
+            else if (result.status === 'error') errorCount++;
+            else if (result.status === 'warning') warningCount++;
+        });
+
+        let message = `API Tests Complete: ${successCount} success, ${errorCount} errors, ${warningCount} warnings`;
+        let type = 'info';
+        
+        if (errorCount > 0) type = 'error';
+        else if (successCount > 0) type = 'success';
+
+        this.showNotification(message, type);
+
+        // Show detailed results in console
+        console.log('API Test Results:', results);
+    }
+
+    updateAPIStatusIndicators(results) {
+        // Update Echo AI status
+        const echoStatus = document.getElementById('echo-ai-status');
+        if (echoStatus && results.echoAI) {
+            echoStatus.className = `api-status ${results.echoAI.status}`;
+            echoStatus.title = results.echoAI.message;
+        }
+    }
+
+    async refreshServices() {
+        try {
+            // Refresh Echo AI status
+            await this.updateStatus();
+            
+            // Refresh media gallery
+            await this.refreshMediaGallery();
+            
+            // Refresh WiFi networks
+            await this.scanWiFiNetworks();
+            
+            // Refresh Bluetooth devices
+            await this.scanBluetoothDevices();
+            
+            this.showNotification('Services refreshed successfully!', 'success');
+        } catch (error) {
+            console.error('Error refreshing services:', error);
+            this.showNotification('Some services failed to refresh', 'warning');
+        }
+    }
+
+    async refreshMediaGallery() {
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/media`, {
+                method: 'GET',
+                headers: { 'X-API-Key': apiKey }
+            });
+            
+            if (response.ok) {
+                const media = await response.json();
+                this.updateMediaGallery(media);
+            }
+        } catch (error) {
+            console.error('Error refreshing media gallery:', error);
+        }
+    }
+
+    updateMediaGallery(media) {
+        const gallery = document.getElementById('media-gallery');
+        if (!gallery) return;
+
+        gallery.innerHTML = '';
+        
+        if (media && media.length > 0) {
+            media.forEach(item => {
+                const mediaItem = document.createElement('div');
+                mediaItem.className = 'media-item';
+                
+                if (item.type === 'image') {
+                    mediaItem.innerHTML = `
+                        <img src="${item.url}" alt="${item.name}" class="media-preview">
+                        <div class="media-info">
+                            <span class="media-name">${item.name}</span>
+                            <button class="btn btn-sm btn-danger" onclick="this.removeMedia('${item.id}')">Remove</button>
+                        </div>
+                    `;
+                } else if (item.type === 'video') {
+                    mediaItem.innerHTML = `
+                        <video src="${item.url}" class="media-preview" controls></video>
+                        <div class="media-info">
+                            <span class="media-name">${item.name}</span>
+                            <button class="btn btn-sm btn-danger" onclick="this.removeMedia('${item.id}')">Remove</button>
+                        </div>
+                    `;
+                }
+                
+                gallery.appendChild(mediaItem);
+            });
+        } else {
+            gallery.innerHTML = '<p class="text-muted">No media files uploaded yet</p>';
+        }
+    }
+
     async sendSettingsToServer() {
         try {
-            const response = await fetch('/api/settings', {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            const response = await fetch(`${apiUrl}/api/settings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-API-Key': 'web-interface'
+                    'X-API-Key': apiKey
                 },
                 body: JSON.stringify(this.settings)
             });
