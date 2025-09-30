@@ -144,7 +144,12 @@ sudo chown -R $USER:$USER /opt/echo-ai
 chmod +x scripts/*.sh
 success "Permissions set"
 
-# Step 10: Test the installation
+# Step 10: Prepare runtime directories
+log "Step 10: Preparing runtime directories..."
+mkdir -p /opt/echo-ai/wallpapers
+success "Created /opt/echo-ai/wallpapers"
+
+# Step 11: Test the installation
 log "Step 10: Testing installation..."
 if python run.py --help >/dev/null 2>&1; then
     success "Python application test passed"
@@ -152,8 +157,8 @@ else
     warning "Python application test failed, but continuing..."
 fi
 
-# Step 11: Start services
-log "Step 11: Starting Echo AI Assistant..."
+# Step 12: Start services
+log "Step 12: Starting Echo AI Assistant..."
 sudo systemctl start echo_web.service
 sleep 3
 
