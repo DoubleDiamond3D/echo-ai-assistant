@@ -7,11 +7,11 @@ Wants=graphical.target
 Type=simple
 User=echo
 Group=echo
-WorkingDirectory=/opt/project-echo
-EnvironmentFile=/opt/project-echo/.env
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=/opt/echo-ai/.env
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/echo/.Xauthority
-ExecStart=/opt/project-echo/.venv/bin/python /opt/project-echo/echo_face.py
+ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face.py
 Restart=on-failure
 RestartSec=5
 
