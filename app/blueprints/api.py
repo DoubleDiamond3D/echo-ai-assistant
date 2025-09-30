@@ -482,9 +482,65 @@ def upload_media() -> Response:
 def scan_wifi() -> Response:
     """Scan for available WiFi networks"""
     try:
-        # For now, return empty list - this would need to be implemented
-        # using system commands like nmcli or iwlist
-        return jsonify([])
+        import subprocess
+        import json
+        
+        # Try nmcli first (NetworkManager)
+        try:
+            result = subprocess.run(['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list'], 
+                                  capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                networks = []
+                for line in result.stdout.strip().split('\n'):
+                    if line and not line.startswith('--'):
+                        parts = line.split(':')
+                        if len(parts) >= 3:
+                            networks.append({
+                                'ssid': parts[0] if parts[0] else 'Hidden',
+                                'signal': parts[1] if parts[1] else 'Unknown',
+                                'security': parts[2] if parts[2] else 'Open'
+                            })
+                return jsonify({"networks": networks})
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        
+        # Fallback to iwlist
+        try:
+            result = subprocess.run(['iwlist', 'scan'], capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                networks = []
+                lines = result.stdout.split('\n')
+                current_network = {}
+                
+                for line in lines:
+                    line = line.strip()
+                    if 'Cell' in line and 'Address' in line:
+                        if current_network:
+                            networks.append(current_network)
+                        current_network = {'ssid': 'Hidden', 'signal': 'Unknown', 'security': 'Open'}
+                    elif 'ESSID:' in line:
+                        ssid = line.split('ESSID:')[1].strip().strip('"')
+                        if ssid:
+                            current_network['ssid'] = ssid
+                    elif 'Signal level=' in line:
+                        signal = line.split('Signal level=')[1].split()[0]
+                        current_network['signal'] = signal
+                    elif 'Encryption key:' in line:
+                        if 'on' in line:
+                            current_network['security'] = 'Encrypted'
+                        else:
+                            current_network['security'] = 'Open'
+                
+                if current_network:
+                    networks.append(current_network)
+                
+                return jsonify({"networks": networks})
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        
+        # If both fail, return empty list
+        return jsonify({"networks": []})
+        
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
@@ -504,9 +560,27 @@ def connect_wifi() -> Response:
         if not ssid:
             return jsonify({"error": "SSID is required"}), 400
         
-        # For now, return success - this would need to be implemented
-        # using system commands like nmcli
-        return jsonify({"ok": True, "message": f"WiFi connection to {ssid} not yet implemented"})
+        import subprocess
+        
+        # Try nmcli (NetworkManager)
+        try:
+            if password:
+                # Connect with password
+                result = subprocess.run(['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password], 
+                                      capture_output=True, text=True, timeout=60)
+            else:
+                # Connect to open network
+                result = subprocess.run(['nmcli', 'device', 'wifi', 'connect', ssid], 
+                                      capture_output=True, text=True, timeout=60)
+            
+            if result.returncode == 0:
+                return jsonify({"ok": True, "message": f"Successfully connected to {ssid}"})
+            else:
+                return jsonify({"error": f"Failed to connect: {result.stderr}"}), 400
+                
+        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+            return jsonify({"error": f"Connection failed: {str(e)}"}), 500
+        
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
@@ -516,9 +590,48 @@ def connect_wifi() -> Response:
 def scan_bluetooth() -> Response:
     """Scan for available Bluetooth devices"""
     try:
-        # For now, return empty list - this would need to be implemented
-        # using system commands like bluetoothctl
-        return jsonify([])
+        import subprocess
+        import json
+        
+        # Use bluetoothctl to scan for devices
+        try:
+            # Start scanning
+            scan_result = subprocess.run(['bluetoothctl', 'scan', 'on'], 
+                                       capture_output=True, text=True, timeout=10)
+            
+            # Wait a bit for devices to be discovered
+            import time
+            time.sleep(5)
+            
+            # Get discovered devices
+            devices_result = subprocess.run(['bluetoothctl', 'devices'], 
+                                          capture_output=True, text=True, timeout=10)
+            
+            if devices_result.returncode == 0:
+                devices = []
+                for line in devices_result.stdout.strip().split('\n'):
+                    if line.startswith('Device '):
+                        parts = line.split(' ', 2)
+                        if len(parts) >= 3:
+                            device_id = parts[1]
+                            device_name = parts[2]
+                            devices.append({
+                                'id': device_id,
+                                'name': device_name,
+                                'status': 'Available'
+                            })
+                
+                # Stop scanning
+                subprocess.run(['bluetoothctl', 'scan', 'off'], 
+                             capture_output=True, text=True, timeout=5)
+                
+                return jsonify({"devices": devices})
+            else:
+                return jsonify({"devices": []})
+                
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return jsonify({"devices": []})
+        
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
@@ -537,9 +650,28 @@ def connect_bluetooth() -> Response:
         if not device_id:
             return jsonify({"error": "Device ID is required"}), 400
         
-        # For now, return success - this would need to be implemented
-        # using system commands like bluetoothctl
-        return jsonify({"ok": True, "message": f"Bluetooth connection to {device_id} not yet implemented"})
+        import subprocess
+        
+        try:
+            # Pair with the device
+            pair_result = subprocess.run(['bluetoothctl', 'pair', device_id], 
+                                       capture_output=True, text=True, timeout=30)
+            
+            if pair_result.returncode == 0:
+                # Connect to the device
+                connect_result = subprocess.run(['bluetoothctl', 'connect', device_id], 
+                                             capture_output=True, text=True, timeout=30)
+                
+                if connect_result.returncode == 0:
+                    return jsonify({"ok": True, "message": f"Successfully connected to {device_id}"})
+                else:
+                    return jsonify({"error": f"Failed to connect: {connect_result.stderr}"}), 400
+            else:
+                return jsonify({"error": f"Failed to pair: {pair_result.stderr}"}), 400
+                
+        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+            return jsonify({"error": f"Connection failed: {str(e)}"}), 500
+        
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
