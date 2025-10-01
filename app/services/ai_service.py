@@ -84,9 +84,14 @@ class AIService:
 
     def _generate_response(self, context: ConversationContext) -> AIResponse:
         """Generate AI response using local LLM or fallback."""
+        LOGGER.info(f"Generating response - Ollama URL configured: {bool(self._settings.ollama_url)}")
+        LOGGER.info(f"Ollama URL: {self._settings.ollama_url}")
+        
         if self._settings.ollama_url:
+            LOGGER.info("Attempting to use Ollama for response generation")
             return self._generate_with_ollama(context)
         else:
+            LOGGER.warning("No Ollama URL configured, using fallback response")
             return self._generate_fallback(context)
 
     def _generate_with_ollama(self, context: ConversationContext) -> AIResponse:
@@ -112,16 +117,32 @@ class AIService:
             
             # Prepare conversation messages
             messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": context.user_input}
+                {"role": "system", "content": system_prompt}
             ]
             
-            # Add recent conversation history
+            # Add recent conversation history (but clean it first)
             for entry in context.conversation_history[-6:]:  # Last 6 exchanges
+                role = entry.get("role", "")
+                content = entry.get("content", "")
+                
+                # Skip empty or invalid entries
+                if not content or not role:
+                    continue
+                    
+                # Clean up content - remove thinking tags and extra formatting
+                if "<think>" in content:
+                    # Extract just the final response after </think>
+                    parts = content.split("</think>")
+                    if len(parts) > 1:
+                        content = parts[-1].strip()
+                
                 messages.append({
-                    "role": entry["role"],
-                    "content": entry["content"]
+                    "role": role,
+                    "content": content
                 })
+            
+            # Add current user input
+            messages.append({"role": "user", "content": context.user_input})
             
             # Call Ollama API
             payload = {
@@ -157,6 +178,8 @@ class AIService:
             
             if not ai_message:
                 LOGGER.warning("Empty response from Ollama")
+                LOGGER.warning(f"Full Ollama response: {result}")
+                LOGGER.warning(f"Messages sent to Ollama: {messages}")
                 raise ValueError("Empty response from Ollama")
             
             # Parse response for actions
@@ -183,6 +206,10 @@ class AIService:
             return self._generate_fallback(context)
         except Exception as exc:
             LOGGER.error(f"Unexpected error with Ollama: {exc}")
+            # If we're getting empty responses, try clearing conversation history
+            if "Empty response from Ollama" in str(exc):
+                LOGGER.info("Clearing conversation history due to empty response")
+                self.clear_history()
             return self._generate_fallback(context)
 
     def _generate_fallback(self, context: ConversationContext) -> AIResponse:
