@@ -156,3 +156,7 @@ echo "  2. Check DRM devices: ls -la /dev/dri/"
 echo "  3. Check groups: groups echo"
 echo "  4. Check logs: sudo journalctl -u echo_face.service -f"
 echo ""
+
+
+
+

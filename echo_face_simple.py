@@ -17,6 +17,7 @@ def signal_handler(signum, frame):
     shutdown_requested = True
 
 def main():
+    global shutdown_requested
     print("=== Echo Face Renderer Starting ===")
     
     # Set up signal handlers

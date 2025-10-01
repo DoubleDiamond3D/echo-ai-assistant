@@ -490,3 +490,7 @@ class SmartHomeManager: ObservableObject {
     }
 }
 
+
+
+
+

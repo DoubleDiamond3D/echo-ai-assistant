@@ -92,6 +92,21 @@ class AIService:
     def _generate_with_ollama(self, context: ConversationContext) -> AIResponse:
         """Generate response using local Ollama instance."""
         try:
+            LOGGER.info(f"Connecting to Ollama at: {self._settings.ollama_url}")
+            LOGGER.info(f"Using model: {self._settings.ai_model}")
+            
+            # First, check if Ollama is reachable
+            try:
+                health_response = requests.get(
+                    f"{self._settings.ollama_url}/api/tags",
+                    timeout=5
+                )
+                health_response.raise_for_status()
+                LOGGER.info("Ollama server is reachable")
+            except Exception as health_exc:
+                LOGGER.error(f"Ollama server not reachable: {health_exc}")
+                raise health_exc
+            
             # Prepare system prompt
             system_prompt = self._build_system_prompt(context)
             
@@ -110,7 +125,7 @@ class AIService:
             
             # Call Ollama API
             payload = {
-                "model": "llama3.2:latest",  # Default model
+                "model": self._settings.ai_model,  # Use configured model
                 "messages": messages,
                 "stream": False,
                 "options": {
@@ -120,18 +135,34 @@ class AIService:
                 }
             }
             
+            LOGGER.info(f"Sending request to Ollama with payload: {payload}")
+            
             response = requests.post(
                 f"{self._settings.ollama_url}/api/chat",
                 json=payload,
-                timeout=30
+                timeout=self._settings.request_timeout,
+                headers={'Content-Type': 'application/json'}
             )
-            response.raise_for_status()
+            
+            LOGGER.info(f"Ollama response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                LOGGER.error(f"Ollama API error: {response.status_code} - {response.text}")
+                response.raise_for_status()
             
             result = response.json()
+            LOGGER.info(f"Ollama response: {result}")
+            
             ai_message = result.get("message", {}).get("content", "")
+            
+            if not ai_message:
+                LOGGER.warning("Empty response from Ollama")
+                raise ValueError("Empty response from Ollama")
             
             # Parse response for actions
             action, parameters = self._parse_response_for_actions(ai_message)
+            
+            LOGGER.info(f"AI response generated successfully: {ai_message[:100]}...")
             
             return AIResponse(
                 response_text=ai_message,
@@ -141,8 +172,17 @@ class AIService:
                 should_speak=True
             )
             
+        except requests.exceptions.ConnectionError as exc:
+            LOGGER.error(f"Connection error to Ollama server: {exc}")
+            return self._generate_fallback(context)
+        except requests.exceptions.Timeout as exc:
+            LOGGER.error(f"Timeout connecting to Ollama server: {exc}")
+            return self._generate_fallback(context)
+        except requests.exceptions.HTTPError as exc:
+            LOGGER.error(f"HTTP error from Ollama server: {exc}")
+            return self._generate_fallback(context)
         except Exception as exc:
-            LOGGER.warning("Ollama request failed: %s", exc)
+            LOGGER.error(f"Unexpected error with Ollama: {exc}")
             return self._generate_fallback(context)
 
     def _generate_fallback(self, context: ConversationContext) -> AIResponse:

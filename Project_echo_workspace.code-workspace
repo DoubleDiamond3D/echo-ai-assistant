@@ -2,6 +2,12 @@
 	"folders": [
 		{
 			"path": "../Users/tyler/OneDrive/Documents/Project_echo_workspace"
+		},
+		{
+			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"chatgpt.openOnStartup": true
+	}
 }

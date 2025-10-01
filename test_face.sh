@@ -9,3 +9,7 @@ export PYGAME_HIDE_SUPPORT_PROMPT=1
 cd /opt/echo-ai
 source .venv/bin/activate
 python echo_face.py
+
+
+
+

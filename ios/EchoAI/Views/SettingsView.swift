@@ -560,3 +560,7 @@ struct WebView: View {
         .environmentObject(SmartHomeManager())
 }
 
+
+
+
+
