@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo AI - Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #00ff88;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+        }
+        .error {
+            background: rgba(255, 82, 82, 0.2);
+            border: 1px solid #ff5252;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196f3;
+        }
+        button {
+            background: linear-gradient(45deg, #00ff88, #00d4ff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .chat-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-radius: 15px;
+        }
+        .user-message {
+            background: rgba(0, 255, 136, 0.3);
+            text-align: right;
+        }
+        .ai-message {
+            background: rgba(33, 150, 243, 0.3);
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Echo AI Connection Test</h1>
+        
+        <div class="test-section">
+            <h3>🔍 System Status</h3>
+            <button onclick="testConnection()">Test Connection</button>
+            <button onclick="testOllama()">Test Ollama</button>
+            <button onclick="getSystemStatus()">Get Status</button>
+            <div id="connection-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💬 AI Chat Test</h3>
+            <input type="text" id="api-key" placeholder="Enter your API key (from .env file)" value="change-me">
+            <input type="text" id="chat-input" placeholder="Type a message to test AI chat..." onkeypress="handleChatKeypress(event)">
+            <button onclick="sendChatMessage()">Send Message</button>
+            <div class="chat-container" id="chat-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎤 Voice & Wake Word Test</h3>
+            <button onclick="testVoice()">Test Voice Input</button>
+            <button onclick="testWakeWord()">Test Wake Word</button>
+            <div id="voice-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 System Information</h3>
+            <button onclick="getMetrics()">Get Metrics</button>
+            <button onclick="getCameras()">List Cameras</button>
+            <div id="system-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        
+        function getApiKey() {
+            return document.getElementById('api-key').value || 'change-me';
+        }
+        
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+        
+        async function makeApiCall(endpoint, options = {}) {
+            const headers = {
+                'X-API-Key': getApiKey(),
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    ...options,
+                    headers
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testConnection() {
+            clearResults('connection-results');
+            addResult('connection-results', '🔍 Testing basic connection...', 'info');
+            
+            const result = await makeApiCall('/health');
+            if (result.success) {
+                addResult('connection-results', `✅ Connection successful! Version: ${result.data.version}`, 'success');
+            } else {
+                addResult('connection-results', `❌ Connection failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function testOllama() {
+            addResult('connection-results', '🧠 Testing Ollama connection...', 'info');
+            
+            // First test a simple chat
+            const result = await makeApiCall('/ai/chat', {
+                method: 'POST',
+                body: JSON.stringify({ message: 'Hello, this is a connection test. Please respond briefly.' })
+            });
+            
+            if (result.success) {
+                addResult('connection-results', `✅ Ollama working! Response: "${result.data.response}"`, 'success');
+            } else {
+                addResult('connection-results', `❌ Ollama test failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function getSystemStatus() {
+            addResult('connection-results', '📊 Getting system status...', 'info');
+            
+            const result = await makeApiCall('/status');
+            if (result.success) {
+                const status = result.data;
+                addResult('connection-results', 
+                    `✅ System Status:<br>
+                    CPU: ${status.cpu_usage?.toFixed(1)}%<br>
+                    Memory: ${status.memory_usage?.toFixed(1)}%<br>
+                    Temperature: ${status.temperature?.toFixed(1)}°C<br>
+                    Uptime: ${Math.floor(status.uptime / 3600)}h ${Math.floor((status.uptime % 3600) / 60)}m`, 
+                    'success'
+                );
+            } else {
+                addResult('connection-results', `❌ Status check failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // Send to AI
+            const result = await makeApiCall('/ai/chat', {
+                method: 'POST',
+                body: JSON.stringify({ message })
+            });
+            
+            if (result.success) {
+                addChatMessage(result.data.response, 'ai');
+            } else {
+                addChatMessage(`Error: ${result.error || result.data?.error}`, 'ai');
+            }
+        }
+        
+        function addChatMessage(message, sender) {
+            const container = document.getElementById('chat-container');
+            const div = document.createElement('div');
+            div.className = `message ${sender}-message`;
+            div.textContent = message;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+        
+        async function testVoice() {
+            clearResults('voice-results');
+            addResult('voice-results', '🎤 Testing voice input...', 'info');
+            
+            const result = await makeApiCall('/voice/status');
+            if (result.success) {
+                addResult('voice-results', `✅ Voice status: ${result.data.listening ? 'Listening' : 'Not listening'}`, 'success');
+            } else {
+                addResult('voice-results', `❌ Voice test failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function testWakeWord() {
+            addResult('voice-results', '🗣️ Testing wake word detection...', 'info');
+            
+            const result = await makeApiCall('/wake-word/status');
+            if (result.success) {
+                const status = result.data;
+                addResult('voice-results', 
+                    `✅ Wake Word Status:<br>
+                    Enabled: ${status.enabled}<br>
+                    Running: ${status.running}<br>
+                    Engine: ${status.engine || 'None'}<br>
+                    Keyword: ${status.keyword || 'None'}`, 
+                    'success'
+                );
+            } else {
+                addResult('voice-results', `❌ Wake word test failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function getMetrics() {
+            clearResults('system-results');
+            addResult('system-results', '📊 Getting system metrics...', 'info');
+            
+            const result = await makeApiCall('/metrics');
+            if (result.success) {
+                const metrics = result.data;
+                addResult('system-results', `✅ Metrics retrieved: ${JSON.stringify(metrics, null, 2)}`, 'success');
+            } else {
+                addResult('system-results', `❌ Metrics failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function getCameras() {
+            addResult('system-results', '📷 Listing cameras...', 'info');
+            
+            const result = await makeApiCall('/cameras');
+            if (result.success) {
+                const cameras = result.data.cameras;
+                addResult('system-results', `✅ Cameras: ${JSON.stringify(cameras, null, 2)}`, 'success');
+            } else {
+                addResult('system-results', `❌ Camera list failed: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        // Auto-test connection on load
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html>
