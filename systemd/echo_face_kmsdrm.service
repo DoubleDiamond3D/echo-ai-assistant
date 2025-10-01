@@ -1,5 +1,5 @@
 [Unit]
-Description=Project Echo Face Renderer
+Description=Project Echo Face Renderer (KMSDRM)
 After=multi-user.target
 Wants=multi-user.target
 
@@ -9,17 +9,32 @@ User=echo
 Group=echo
 WorkingDirectory=/opt/echo-ai
 EnvironmentFile=/opt/echo-ai/.env
+
+# KMSDRM specific environment
 Environment="SDL_VIDEODRIVER=kmsdrm"
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
 Environment="PYTHONUNBUFFERED=1"
 Environment="PYGAME_HIDE_SUPPORT_PROMPT=1"
 Environment="ECHO_FACE_FULLSCREEN=1"
-ExecStartPre=/bin/sleep 2
+
+# Create XDG_RUNTIME_DIR if it doesn't exist
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown echo:echo /run/user/1000
+ExecStartPre=/bin/chmod 700 /run/user/1000
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+
+# Give DRM time to initialize
+ExecStartPre=/bin/sleep 3
+
+# Main executable
 ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face.py
+
+# Restart policy
 Restart=on-failure
 RestartSec=10
 TimeoutStartSec=30
 TimeoutStopSec=10
+
+# Logging
 StandardOutput=journal
 StandardError=journal
 
