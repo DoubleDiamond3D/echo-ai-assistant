@@ -182,6 +182,9 @@ class AIService:
                 LOGGER.warning(f"Messages sent to Ollama: {messages}")
                 raise ValueError("Empty response from Ollama")
             
+            # Clean up the response
+            ai_message = self._clean_response(ai_message)
+            
             # Parse response for actions
             action, parameters = self._parse_response_for_actions(ai_message)
             
@@ -275,21 +278,70 @@ class AIService:
                 should_speak=True
             )
 
+    def _clean_response(self, response: str) -> str:
+        """Clean up AI response to remove verbose thinking and keep only the final answer."""
+        # Remove <think> tags and everything inside them
+        import re
+        response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+        
+        # Remove common verbose patterns
+        verbose_patterns = [
+            r'Let me think about this\.\s*',
+            r'Let me recall\s+.*?\.\s*',
+            r'I need to remember\s+.*?\.\s*',
+            r'Wait,?\s+.*?\.\s*',
+            r'Actually,?\s+.*?\.\s*',
+            r'Let me double-check\s+.*?\.\s*',
+            r'I should make sure\s+.*?\.\s*',
+            r'Let me confirm\s+.*?\.\s*',
+            r'I think\s+.*?\.\s*',
+            r'I believe\s+.*?\.\s*',
+            r'If I remember correctly,?\s*',
+            r'From what I know,?\s*',
+            r'As far as I can recall,?\s*'
+        ]
+        
+        for pattern in verbose_patterns:
+            response = re.sub(pattern, '', response, flags=re.IGNORECASE)
+        
+        # Clean up multiple spaces and newlines
+        response = re.sub(r'\s+', ' ', response)
+        response = response.strip()
+        
+        # If the response is still very long, try to extract just the key information
+        if len(response) > 200:
+            # Look for sentences that contain the actual answer
+            sentences = response.split('.')
+            for sentence in sentences:
+                sentence = sentence.strip()
+                # Look for sentences that seem to contain direct answers
+                if any(word in sentence.lower() for word in ['is', 'are', 'equals', 'capital', 'answer']):
+                    if len(sentence) < 100:  # Reasonable length
+                        return sentence + '.'
+        
+        return response
+
     def _build_system_prompt(self, context: ConversationContext) -> str:
         """Build system prompt for AI context."""
-        return f"""You are Echo, an AI assistant running on a Raspberry Pi. You have the following capabilities:
+        return f"""You are Echo, an AI assistant running on a Raspberry Pi. 
+
+IMPORTANT: Give direct, concise answers. Do not show your thinking process or reasoning steps. Just provide the final answer clearly and briefly.
 
 Current State: {context.robot_state.get('state', 'unknown')}
 System Status: CPU {context.system_metrics.get('core', {}).get('cpu_percent', 0):.1f}%, Memory usage available
+
 Available Actions:
 - set_state: Change robot state (idle, talking, sleeping)
 - camera_action: Control camera (start, stop)
 - speak: Make the robot speak text
 - toggle: Control robot features (listening, beam lights)
 
-You can ask questions when you need clarification. Be helpful, concise, and friendly. 
-Respond in JSON format with 'response', 'action', and 'parameters' fields when you want to perform actions.
-Otherwise, just respond naturally."""
+Examples of good responses:
+- User: "What is the capital of Montana?" → "The capital of Montana is Helena."
+- User: "What's 2+2?" → "2+2 equals 4."
+- User: "How are you?" → "I'm doing well! How can I help you?"
+
+Be helpful, friendly, and concise. Only use JSON format if you need to perform actions."""
 
     def _parse_response_for_actions(self, response_text: str) -> tuple[Optional[str], Dict[str, Any]]:
         """Parse AI response for actions."""
