@@ -1,81 +1,78 @@
 #!/usr/bin/env python3
-"""Minimal face renderer that definitely won't hang."""
+"""Minimal face renderer that bypasses SDL driver issues."""
+from __future__ import annotations
 
 import os
 import sys
-import time
 
-def main():
-    print("=== Echo Face Renderer Starting ===")
-    
-    # Set environment variables
-    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-    os.environ['SDL_VIDEODRIVER'] = 'dummy'
-    
+# Try to force dummy driver first to test pygame
+os.environ['SDL_VIDEODRIVER'] = 'dummy'
+os.environ['SDL_AUDIODRIVER'] = 'dummy'
+
+print(f"🔧 Using SDL_VIDEODRIVER: {os.environ['SDL_VIDEODRIVER']}")
+
+import pygame
+import json
+import math
+import time
+from pathlib import Path
+
+from app.config import Settings
+from app.utils.env import load_first_existing
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def load_state(state_path: Path) -> dict:
     try:
-        import pygame
-        print("✅ Pygame imported")
-    except ImportError as e:
-        print(f"❌ Pygame import failed: {e}")
-        return 1
+        return json.loads(state_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"state": "idle", "last_talk": 0.0, "toggles": {}}
+
+
+def main() -> None:
+    print("🚀 Starting Minimal Echo Face Renderer")
     
+    # Load settings
+    load_first_existing([BASE_DIR / ".env", BASE_DIR.parent / ".env"])
+    settings = Settings.from_env(BASE_DIR)
+    state_path = settings.data_dir / "echo_state.json"
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+
     try:
+        # Initialize pygame with dummy driver
         pygame.init()
         print("✅ Pygame initialized")
-    except Exception as e:
-        print(f"❌ Pygame init failed: {e}")
-        return 1
-    
-    try:
-        screen = pygame.display.set_mode((100, 100), 0)
-        print("✅ Display created")
-    except Exception as e:
-        print(f"❌ Display creation failed: {e}")
-        pygame.quit()
-        return 1
-    
-    # Simple loop with timeout
-    print("Starting main loop...")
-    start_time = time.time()
-    frame_count = 0
-    
-    try:
-        while frame_count < 100:  # Only run for 100 frames
-            # Handle events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    print("QUIT event received")
-                    break
-            
-            # Simple drawing
-            screen.fill((0, 0, 0))
-            pygame.draw.circle(screen, (0, 255, 0), (50, 50), 20)
+        
+        # Check driver
+        driver = pygame.display.get_driver()
+        print(f"🎮 SDL driver: {driver}")
+        
+        # Create a small surface for testing
+        size = (320, 240)
+        screen = pygame.display.set_mode(size)
+        print(f"✅ Display created: {size}")
+        
+        # Simple test - just fill screen with colors
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)]
+        
+        for i in range(20):  # Run for a few seconds
+            color = colors[i % len(colors)]
+            screen.fill(color)
             pygame.display.flip()
-            
-            # Sleep
-            time.sleep(0.1)
-            frame_count += 1
-            
-            # Check timeout
-            if time.time() - start_time > 30:  # 30 second timeout
-                print("Timeout reached, exiting")
-                break
-            
-            if frame_count % 10 == 0:
-                print(f"Frame {frame_count}")
-    
+            time.sleep(0.2)
+            print(f"📊 Frame {i+1}/20 - Color: {color}")
+        
+        print("✅ Minimal test completed successfully!")
+        
     except Exception as e:
         print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
-        print("Cleaning up...")
         pygame.quit()
-        print("✅ Done")
-    
-    return 0
+        print("🧹 Pygame cleaned up")
+
 
 if __name__ == "__main__":
-    sys.exit(main())
-
-
-
-
+    main()
