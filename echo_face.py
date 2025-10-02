@@ -13,7 +13,7 @@ import pygame
 from app.config import Settings
 from app.utils.env import load_first_existing
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent if '__file__' in globals() else Path('/opt/echo-ai')
 
 
 def load_state(state_path: Path) -> dict:
