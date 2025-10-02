@@ -379,9 +379,6 @@ class EchoDashboard {
             await this.startCamera();
         }
     }
-            this.showNotification(`Failed to start camera: ${error.message}`, 'error');
-        }
-    }
 
     async stopCamera() {
         try {
@@ -400,7 +397,7 @@ class EchoDashboard {
             if (!response.ok) {
                 console.warn(`Failed to stop camera service: ${response.status}`);
             }
-  } catch (error) {
+        } catch (error) {
             console.warn('Error stopping camera service:', error);
         }
         
@@ -1163,6 +1160,3 @@ class EchoDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     window.echoDashboard = new EchoDashboard();
 });
-
-Thursday, October 2, 2025 5:22:43 AM
-
