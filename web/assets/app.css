@@ -369,7 +369,8 @@ body::before {
 }
 
 .form-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 /* Media Display */
@@ -853,6 +854,24 @@ body::before {
 .camera-icon {
   font-size: 3rem;
   margin-bottom: var(--spacing-sm);
+}
+
+/* Camera Controls Styling */
+.camera-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.camera-select {
+  min-width: 180px;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
 }
 
 .live-feed {

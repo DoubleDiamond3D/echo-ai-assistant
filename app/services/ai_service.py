@@ -349,7 +349,12 @@ Be helpful, friendly, and concise. Only use JSON format if you need to perform a
             # Try to parse as JSON first
             if response_text.strip().startswith('{'):
                 data = json.loads(response_text)
-                return data.get('action'), data.get('parameters', {})
+                # Check for standard format
+                if 'action' in data:
+                    return data.get('action'), data.get('parameters', {})
+                # Check for set_state command
+                elif 'set_state' in data:
+                    return "set_state", {"state": data['set_state']}
         except json.JSONDecodeError:
             pass
         

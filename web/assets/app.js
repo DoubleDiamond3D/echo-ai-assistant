@@ -36,6 +36,12 @@ class EchoDashboard {
         if (cameraRecord) {
             cameraRecord.addEventListener('click', () => this.toggleRecording());
         }
+
+        // Camera Source Selector
+        const cameraSource = document.getElementById('camera-source');
+        if (cameraSource) {
+            cameraSource.addEventListener('change', () => this.switchCamera());
+        }
         if (takePhoto) {
             takePhoto.addEventListener('click', () => this.capturePhoto());
         }
@@ -373,35 +379,6 @@ class EchoDashboard {
             await this.startCamera();
         }
     }
-
-    async startCamera() {
-        try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
-            
-            const response = await fetch(`${apiUrl}/api/cameras/start`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': apiKey
-                },
-                body: JSON.stringify({ name: 'head' })
-            });
-            
-            if (response.ok) {
-                const cameraFeed = document.getElementById('camera-feed');
-                cameraFeed.innerHTML = `
-                    <img src="${apiUrl}/stream/camera/head" alt="Live Camera Feed" class="live-feed" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                `;
-                
-                this.cameraActive = true;
-                document.getElementById('camera-toggle').textContent = 'Stop Camera';
-                this.showNotification('Camera started successfully!', 'success');
-    } else {
-                throw new Error(`Failed to start camera: ${response.status}`);
-    }
-  } catch (error) {
-            console.error('Error starting camera:', error);
             this.showNotification(`Failed to start camera: ${error.message}`, 'error');
         }
     }
@@ -438,6 +415,68 @@ class EchoDashboard {
         this.cameraActive = false;
         document.getElementById('camera-toggle').textContent = 'Start Camera';
         this.showNotification('Camera stopped', 'info');
+    }
+
+    async switchCamera() {
+        const cameraSource = document.getElementById('camera-source');
+        const selectedCamera = cameraSource.value;
+        
+        // If camera is currently active, restart it with new source
+        if (this.cameraActive) {
+            await this.stopCamera();
+            
+            // Brief delay to ensure camera is fully stopped
+            setTimeout(async () => {
+                await this.startCamera(selectedCamera);
+            }, 500);
+        }
+        
+        // Update camera name display
+        const cameraName = cameraSource.options[cameraSource.selectedIndex].text;
+        this.showNotification(`Switched to ${cameraName}`, 'info');
+    }
+
+    async startCamera(cameraDevice = null) {
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+            
+            // Use selected camera or default
+            const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
+            
+            const response = await fetch(`${apiUrl}/api/cameras/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
+                body: JSON.stringify({ 
+                    camera: selectedCamera,
+                    resolution: '1280x720',
+                    fps: 30
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Update camera feed
+                document.getElementById('camera-feed').innerHTML = `
+                    <img src="${apiUrl}/api/cameras/stream?camera=${encodeURIComponent(selectedCamera)}" 
+                         class="live-feed" alt="Live Camera Feed" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
+                `;
+                
+                this.cameraActive = true;
+                document.getElementById('camera-toggle').textContent = 'Stop Camera';
+                this.showNotification('Camera started successfully!', 'success');
+            } else {
+                throw new Error('Failed to start camera');
+            }
+        } catch (error) {
+            console.error('Camera start error:', error);
+            this.showNotification('Failed to start camera', 'error');
+        }
     }
 
     async capturePhoto() {
