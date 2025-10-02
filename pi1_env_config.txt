@@ -1,0 +1,44 @@
+# Pi #1 (Brain) Configuration
+# Echo AI Assistant - Brain Pi Environment Configuration
+
+# Core Settings
+ECHO_ROLE=brain
+ECHO_API_TOKEN=Lolo6750
+ECHO_AI_MODEL=qwen2.5:latest
+
+# Network Configuration
+ECHO_FACE_PI_URL=http://192.168.68.63:5001
+OLLAMA_URL=http://localhost:11434
+
+# Service Configuration - Brain Pi
+ECHO_WEB_INTERFACE_ENABLED=1
+ECHO_BACKUP_ENABLED=1
+ECHO_FACE_DISPLAY_ENABLED=0
+ECHO_VOICE_INPUT_ENABLED=0
+ECHO_CAMERA_ENABLED=0
+
+# Performance Settings
+ECHO_MAX_CONCURRENT_REQUESTS=10
+ECHO_REQUEST_TIMEOUT=30
+
+# Voice Settings (Disabled on Brain)
+ECHO_VOICE_INPUT_DEVICE=default
+ECHO_VOICE_INPUT_LANGUAGE=en
+
+# Face Recognition (Disabled on Brain)
+ECHO_FACE_RECOGNITION_ENABLED=0
+ECHO_FACE_RECOGNITION_CONFIDENCE=0.6
+
+# Network and Remote Access
+ECHO_WIFI_SETUP_ENABLED=1
+ECHO_REMOTE_ACCESS_ENABLED=1
+CLOUDFLARE_TUNNEL_TOKEN=your-tunnel-token
+
+# Wallpaper Sync Settings
+WALLPAPER_SYNC_ENABLED=1
+WALLPAPER_SOURCE_DIR=/opt/echo-ai/wallpapers
+WALLPAPER_SYNC_INTERVAL=300
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FILE=/opt/echo-ai/logs/echo-brain.log
