@@ -1,0 +1,39 @@
+[Unit]
+Description=Echo AI Face Display (Pi #2)
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=-/opt/echo-ai/.env
+
+# Display environment
+Environment="DISPLAY=:0"
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYGAME_HIDE_SUPPORT_PROMPT=1"
+
+# Create runtime directory
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown echo:echo /run/user/1000
+ExecStartPre=/bin/chmod 700 /run/user/1000
+
+# Main executable
+ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/services/echo_face_pi2.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=echo_face
+
+[Install]
+WantedBy=graphical.target

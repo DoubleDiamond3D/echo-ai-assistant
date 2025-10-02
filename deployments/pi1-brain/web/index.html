@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo AI Assistant - Professional Dashboard</title>
+    <link rel="stylesheet" href="assets/app.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header fade-in-up">
+            <div class="logo">
+                <div class="logo-icon">🤖</div>
+                <span>Echo AI Assistant</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="connection-status">Connected</span>
+            </div>
+        </header>
+
+        <!-- Status Overview -->
+        <div class="status-grid fade-in-up">
+            <div class="status-card">
+                <div class="status-value" id="uptime">00:00:00</div>
+                <div class="status-label">Uptime</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="cpu-usage">0%</div>
+                <div class="status-label">CPU Usage</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="memory-usage">0%</div>
+                <div class="status-label">Memory</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="temperature">0°C</div>
+                <div class="status-label">Temperature</div>
+            </div>
+        </div>
+
+        <!-- Top Controls Bar -->
+        <div class="top-controls fade-in-up">
+            <!-- Live Camera Feed -->
+            <div class="camera-section">
+                <div class="camera-header">
+                    <h3>📹 Live Camera</h3>
+                    <div class="camera-controls">
+                        <button class="btn btn-sm" id="camera-toggle">Start Camera</button>
+                        <button class="btn btn-sm" id="camera-capture">📸</button>
+                        <button class="btn btn-sm" id="camera-record">🔴</button>
+                    </div>
+                </div>
+                <div class="camera-feed" id="camera-feed">
+                    <div class="camera-placeholder">
+                        <div class="camera-icon">📹</div>
+                        <p>Click "Start Camera" to begin live feed</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-settings">
+                <button class="btn btn-sm btn-secondary" id="wifi-scan-btn">📶 WiFi</button>
+                <button class="btn btn-sm btn-secondary" id="bluetooth-scan-btn">🔵 Bluetooth</button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Chat Interface -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">💬 Chat with Echo</h3>
+                    <div class="card-icon">💭</div>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message assistant">
+                            <div>Hello! I'm Echo, your AI assistant. How can I help you today?</div>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
+                        <button class="btn btn-primary" id="send-message">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media Display -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">🖼️ Media Display</h3>
+                    <div class="card-icon">📺</div>
+                </div>
+                <div class="media-display" id="media-display" onclick="document.getElementById('media-upload').click()">
+                    <div class="media-upload-icon">📁</div>
+                    <div class="media-upload-text">Click to upload image or video</div>
+                    <div class="media-upload-text" style="font-size: 0.8rem; margin-top: 4px;">Supports: JPG, PNG, GIF, MP4, WebM</div>
+                </div>
+                <input type="file" id="media-upload" accept="image/*,video/*" style="display: none;">
+                <div class="form-group mt-2">
+                    <button class="btn btn-secondary" id="clear-media">Clear Media</button>
+                    <button class="btn btn-primary" id="set-pi-wallpaper">Set as Pi Wallpaper</button>
+                </div>
+            </div>
+
+            <!-- WiFi Management -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">📶 WiFi Networks</h3>
+                    <div class="card-icon">🌐</div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="scan-wifi">Scan Networks</button>
+                    <button class="btn btn-secondary" id="refresh-wifi">Refresh</button>
+                </div>
+                <div class="network-list" id="wifi-networks">
+                    <div class="network-item">
+                        <div class="network-info">
+                            <div class="network-name">Scanning for networks...</div>
+                            <div class="network-details">Click "Scan Networks" to begin</div>
+                        </div>
+                        <div class="network-signal">
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Connect to Network</label>
+                    <input type="text" class="form-input" id="wifi-ssid" placeholder="Network Name (SSID)">
+                    <input type="password" class="form-input" id="wifi-password" placeholder="Password (if required)">
+                    <button class="btn btn-success" id="connect-wifi">Connect</button>
+                </div>
+            </div>
+
+            <!-- Bluetooth Management -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">🔵 Bluetooth Devices</h3>
+                    <div class="card-icon">📱</div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="scan-bluetooth">Scan Devices</button>
+                    <button class="btn btn-secondary" id="refresh-bluetooth">Refresh</button>
+                </div>
+                <div class="network-list" id="bluetooth-devices">
+                    <div class="bluetooth-device">
+                        <div class="device-info">
+                            <div class="device-icon">📱</div>
+                            <div class="device-details">
+                                <div class="device-name">Scanning for devices...</div>
+                                <div class="device-status">Click "Scan Devices" to begin</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm">Connect</button>
+                    </div>
+                </div>
+                <div class="form-group mt-2">
+                    <label class="form-label">Bluetooth Status</label>
+                    <div class="form-group">
+                        <label class="toggle">
+                            <input type="checkbox" id="bluetooth-enabled">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="ml-2">Enable Bluetooth</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice Settings -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">🎤 Voice Settings</h3>
+                    <div class="card-icon">🔊</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Voice Input</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="voice-input-enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Wake Word Detection</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="wake-word-enabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Voice Output</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="voice-output-enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Microphone Sensitivity</label>
+                    <input type="range" class="form-input" id="mic-sensitivity" min="0" max="100" value="50">
+                    <div class="text-center" style="font-size: 0.8rem; color: var(--text-muted);">
+                        <span id="mic-sensitivity-value">50%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">⚙️ System Settings</h3>
+                    <div class="card-icon">🔧</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AI Model</label>
+                    <select class="form-input" id="ai-model">
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="ollama-llama2">Ollama Llama2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Response Language</label>
+                    <select class="form-input" id="response-language">
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Auto Backup</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="auto-backup-enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Backup Frequency</label>
+                    <select class="form-input" id="backup-frequency">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Camera Controls -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">📷 Camera Controls</h3>
+                    <div class="card-icon">📸</div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="take-photo">Take Photo</button>
+                    <button class="btn btn-secondary" id="start-recording">Start Recording</button>
+                    <button class="btn btn-danger" id="stop-recording" style="display: none;">Stop Recording</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Camera Resolution</label>
+                    <select class="form-input" id="camera-resolution">
+                        <option value="1920x1080">1080p (1920x1080)</option>
+                        <option value="1280x720">720p (1280x720)</option>
+                        <option value="640x480">480p (640x480)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Face Recognition</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="face-recognition-enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Backup & Restore -->
+            <div class="glass-card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title">💾 Backup & Restore</h3>
+                    <div class="card-icon">🔄</div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="create-backup">Create Backup</button>
+                    <button class="btn btn-secondary" id="restore-backup">Restore Backup</button>
+                    <button class="btn btn-danger" id="restart-system">Restart System</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Backup Size</label>
+                    <div class="text-center" style="font-size: 0.9rem; color: var(--text-secondary);">
+                        <span id="backup-size">Calculating...</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Backup</label>
+                    <div class="text-center" style="font-size: 0.9rem; color: var(--text-secondary);">
+                        <span id="last-backup">Never</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API & Connections (Persistent Bottom Section) -->
+        <div class="glass-card fade-in-up" id="api-connections" style="margin-top: var(--spacing-xl);">
+            <div class="card-header">
+                <h3 class="card-title">🔌 API & Connections</h3>
+            </div>
+            <div class="dashboard-grid">
+                <div class="form-group">
+                    <label class="form-label">Echo AI Connection</label>
+                    <div class="api-status-row">
+                        <input type="text" class="form-input" id="echo-api-url" placeholder="Echo AI Server URL (e.g., http://192.168.1.100:5000)" value="http://localhost:5000">
+                        <span class="api-status" id="echo-ai-status">●</span>
+                    </div>
+                    <input type="password" class="form-input" id="echo-api-key" placeholder="Echo AI API Key (for web interface authentication)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AI Service API Keys</label>
+                    <input type="password" class="form-input" id="openai-key" placeholder="OpenAI API Key">
+                    <input type="password" class="form-input" id="anthropic-key" placeholder="Anthropic API Key">
+                    <input type="text" class="form-input" id="ollama-url" placeholder="Ollama Server URL (e.g., http://localhost:11434)">
+                    <input type="password" class="form-input" id="porcupine-key" placeholder="Porcupine Access Key (for wake word)">
+                    <input type="text" class="form-input" id="snowboy-model" placeholder="Snowboy Model Path">
+                    <input type="text" class="form-input" id="vosk-model" placeholder="Vosk Model Path">
+                    <input type="password" class="form-input" id="cloudflare-token" placeholder="Cloudflare Tunnel Token">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Backup Settings</label>
+                    <div class="form-row">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="backup-enabled">
+                            <span class="checkmark"></span>
+                            Enable Auto Backup
+                        </label>
+                    </div>
+                    <select class="form-input" id="backup-frequency">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="save-settings">Save & Test APIs</button>
+                    <button class="btn btn-secondary" id="refresh-services">Refresh Services</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cloudflare Tunnel</label>
+                    <input type="text" class="form-input" id="tunnel-token" placeholder="Cloudflare Tunnel Token">
+                    <button class="btn btn-primary" id="test-tunnel">Test Connection</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center" style="margin-top: var(--spacing-xl); padding: var(--spacing-lg); color: var(--text-muted);">
+            <p>Echo AI Assistant v2.0 - Professional Edition</p>
+        </footer>
+    </div>
+
+    <script src="assets/app.js"></script>
+</body>
+</html>

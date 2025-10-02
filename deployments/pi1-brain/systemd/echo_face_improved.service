@@ -1,0 +1,58 @@
+[Unit]
+Description=Echo AI Face Renderer (Improved)
+After=multi-user.target
+Wants=multi-user.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=-/opt/echo-ai/.env
+
+# Python and SDL settings
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYGAME_HIDE_SUPPORT_PROMPT=1"
+Environment="SDL_VIDEODRIVER=fbcon"
+Environment="SDL_FBDEV=/dev/fb0"
+
+# Create necessary directories and fix permissions
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown echo:echo /run/user/1000
+ExecStartPre=/bin/chmod 700 /run/user/1000
+ExecStartPre=/bin/bash -c 'chown echo:video /dev/fb0 2>/dev/null || true'
+ExecStartPre=/bin/bash -c 'chmod 664 /dev/fb0 2>/dev/null || true'
+
+# Set XDG_RUNTIME_DIR after creating it
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+
+# Give system time to initialize
+ExecStartPre=/bin/sleep 3
+
+# Main executable
+ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+TimeoutStopSec=15
+
+# Resource limits
+MemoryMax=256M
+CPUQuota=50%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=echo_face
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/echo-ai/data /run/user/1000 /dev/fb0
+
+[Install]
+WantedBy=multi-user.target

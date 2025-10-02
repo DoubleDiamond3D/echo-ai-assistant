@@ -1,0 +1,20 @@
+[Unit]
+Description=Project Echo Web Control Center
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=/opt/echo-ai/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/echo-ai/.venv/bin/python run.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
+

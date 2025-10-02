@@ -1,0 +1,39 @@
+[Unit]
+Description=Project Echo Face Renderer
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=/opt/echo-ai/.env
+
+# Display settings for X11
+Environment="DISPLAY=:0"
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYGAME_HIDE_SUPPORT_PROMPT=1"
+Environment="ECHO_FACE_FULLSCREEN=0"
+
+# Fix XDG_RUNTIME_DIR - create it if it doesn't exist
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown echo:echo /run/user/1000
+ExecStartPre=/bin/chmod 700 /run/user/1000
+
+# Give it a moment to ensure display is ready
+ExecStartPre=/bin/sleep 2
+
+ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face.py
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target

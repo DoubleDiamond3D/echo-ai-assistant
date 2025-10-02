@@ -1,0 +1,40 @@
+[Unit]
+Description=Project Echo Face Renderer (Headless)
+After=multi-user.target
+Wants=multi-user.target
+
+[Service]
+Type=simple
+User=echo
+Group=echo
+WorkingDirectory=/opt/echo-ai
+EnvironmentFile=/opt/echo-ai/.env
+
+# Framebuffer settings for headless operation
+Environment="SDL_VIDEODRIVER=fbcon"
+Environment="SDL_FBDEV=/dev/fb0"
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYGAME_HIDE_SUPPORT_PROMPT=1"
+
+# No X11 or XDG_RUNTIME_DIR needed for framebuffer
+# Remove these problematic lines:
+# Environment="XDG_RUNTIME_DIR=/run/user/1000"
+# Environment="DISPLAY=:0"
+
+# Give framebuffer time to initialize
+ExecStartPre=/bin/sleep 2
+# Ensure echo user has access to framebuffer
+ExecStartPre=/bin/bash -c 'chown echo:video /dev/fb0 || true'
+
+ExecStart=/opt/echo-ai/.venv/bin/python /opt/echo-ai/echo_face_headless.py
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
