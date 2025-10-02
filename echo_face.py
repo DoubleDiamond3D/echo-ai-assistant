@@ -17,6 +17,18 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 def load_state(state_path: Path) -> dict:
+    # Try to get state from Pi #1 via HTTP first
+    try:
+        import urllib.request
+        import urllib.error
+        brain_host = os.environ.get("BRAIN_HOST", "192.168.68.56")
+        url = f"http://{brain_host}:5000/api/state"
+        with urllib.request.urlopen(url, timeout=2) as response:
+            return json.loads(response.read().decode())
+    except Exception:
+        pass
+    
+    # Fallback to local file
     try:
         return json.loads(state_path.read_text(encoding="utf-8"))
     except Exception:
