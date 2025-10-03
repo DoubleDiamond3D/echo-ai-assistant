@@ -16,6 +16,7 @@ class EchoDashboard {
         this.startStatusUpdates();
         this.updateUI();
         this.updateConnectionStatus(false);
+        this.detectAvailableCameras();
     }
 
     setupEventListeners() {
@@ -256,6 +257,75 @@ class EchoDashboard {
         return 'head'; // Default
     }
 
+    // Detect available cameras and populate dropdown
+    async detectAvailableCameras() {
+        // For now, always show both cameras since detection API doesn't exist
+        // Based on your context files, these are the actual camera devices
+        const defaultCameras = [
+            { device: '/dev/video0', name: 'Pi Camera (CSI)', available: true },
+            { device: '/dev/video1', name: 'USB Camera (PC-LM1E)', available: true }
+        ];
+
+        this.populateCameraDropdown(defaultCameras);
+
+        // Future: Try to detect cameras via API when endpoint is available
+        /*
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+
+            const response = await fetch(`${apiUrl}/api/cameras/list`, {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': apiKey
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.populateCameraDropdown(data.cameras || defaultCameras);
+            }
+        } catch (error) {
+            console.warn('Camera detection failed, using defaults:', error);
+        }
+        */
+    }
+
+    // Populate camera dropdown with detected cameras
+    populateCameraDropdown(cameras) {
+        const cameraSelect = document.getElementById('camera-source');
+        if (!cameraSelect) return;
+
+        // Clear existing options
+        cameraSelect.innerHTML = '';
+
+        // Add detected cameras
+        cameras.forEach(camera => {
+            const option = document.createElement('option');
+            option.value = camera.device;
+            option.textContent = `${camera.name}${camera.available ? '' : ' (Unavailable)'}`;
+            option.disabled = !camera.available;
+            cameraSelect.appendChild(option);
+        });
+
+        // If no cameras detected, add defaults
+        if (cameras.length === 0) {
+            const defaultCameras = [
+                { device: '/dev/video0', name: 'Pi Camera (CSI)' },
+                { device: '/dev/video1', name: 'USB Camera (PC-LM1E)' }
+            ];
+
+            defaultCameras.forEach(camera => {
+                const option = document.createElement('option');
+                option.value = camera.device;
+                option.textContent = camera.name;
+                cameraSelect.appendChild(option);
+            });
+        }
+
+        console.log(`Populated camera dropdown with ${cameras.length || 2} cameras`);
+    }
+
     saveSettings() {
         // Get all form values
         this.settings.echoApiUrl = document.getElementById('echo-api-url')?.value || 'http://localhost:5000';
@@ -438,20 +508,25 @@ class EchoDashboard {
     async switchCamera() {
         const cameraSource = document.getElementById('camera-source');
         const selectedCamera = cameraSource.value;
+        const cameraDisplayName = cameraSource.options[cameraSource.selectedIndex].text;
+
+        console.log(`Switching camera to: ${selectedCamera} (${cameraDisplayName})`);
 
         // If camera is currently active, restart it with new source
         if (this.cameraActive) {
+            this.showNotification(`Switching to ${cameraDisplayName}...`, 'info');
+
+            // Stop current camera
             await this.stopCamera();
 
             // Brief delay to ensure camera is fully stopped
             setTimeout(async () => {
                 await this.startCamera(selectedCamera);
-            }, 500);
+            }, 1000); // Increased delay to ensure proper switching
+        } else {
+            // Just update the notification if camera isn't active
+            this.showNotification(`Selected ${cameraDisplayName}`, 'info');
         }
-
-        // Update camera name display
-        const cameraName = cameraSource.options[cameraSource.selectedIndex].text;
-        this.showNotification(`Switched to ${cameraName}`, 'info');
     }
 
     async startCamera(cameraDevice = null) {
@@ -461,6 +536,16 @@ class EchoDashboard {
 
             // Use selected camera or default
             const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
+
+            // Get camera name for streaming endpoint based on the selected camera
+            let cameraName = 'head'; // Default
+            if (selectedCamera.includes('video1')) {
+                cameraName = 'usb'; // USB camera
+            } else if (selectedCamera.includes('video0')) {
+                cameraName = 'head'; // Pi camera
+            }
+
+            console.log(`Starting camera: ${selectedCamera} -> ${cameraName}`);
 
             const response = await fetch(`${apiUrl}/api/cameras/start`, {
                 method: 'POST',
@@ -478,22 +563,18 @@ class EchoDashboard {
             if (response.ok) {
                 const result = await response.json();
 
-                // Get camera name for streaming endpoint
-                const cameraName = this.getCurrentCameraName();
-
-                console.log(`Starting camera: ${selectedCamera} -> ${cameraName}`);
-
-                // Update camera feed with proper API key authentication
+                // Update camera feed with proper API key authentication and unique timestamp
+                const timestamp = Date.now();
                 document.getElementById('camera-feed').innerHTML = `
-                    <img src="${apiUrl}/stream/camera/${cameraName}?api_key=${encodeURIComponent(apiKey)}&t=${Date.now()}" 
+                    <img src="${apiUrl}/stream/camera/${cameraName}?api_key=${encodeURIComponent(apiKey)}&t=${timestamp}" 
                          class="live-feed" alt="Live Camera Feed" 
-                         onload="console.log('Camera ${cameraName} loaded successfully')"
+                         onload="console.log('Camera ${cameraName} loaded successfully at ${timestamp}')"
                          onerror="console.error('Camera ${cameraName} failed to load:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
                 `;
 
                 this.cameraActive = true;
                 document.getElementById('camera-toggle').textContent = 'Stop Camera';
-                this.showNotification('Camera started successfully!', 'success');
+                this.showNotification(`Camera started: ${cameraName}`, 'success');
             } else {
                 throw new Error('Failed to start camera');
             }
