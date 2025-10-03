@@ -739,7 +739,7 @@ def _sync_wallpaper_to_pi2(file_path: str, filename: str) -> dict:
         # Method 1: Try SCP (fastest)
         scp_cmd = [
             'scp', '-o', 'ConnectTimeout=10', '-o', 'StrictHostKeyChecking=no',
-            file_path, f'pi@{pi2_ip}:/opt/echo-ai/wallpapers/{filename}'
+            file_path, f'echo2@{pi2_ip}:/opt/echo-ai/wallpapers/{filename}'
         ]
         
         result = subprocess.run(scp_cmd, capture_output=True, timeout=30)

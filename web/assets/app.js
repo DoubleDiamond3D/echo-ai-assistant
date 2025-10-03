@@ -110,12 +110,7 @@ class EchoDashboard {
             clearMedia.addEventListener('click', () => this.clearMedia());
         }
         if (setPiWallpaper) {
-            setPiWallpaper.addEventListener('click', () => {
-                alert('Set Pi Wallpaper button clicked!');
-                this.setPiWallpaper();
-            });
-        } else {
-            alert('Set Pi Wallpaper button not found!');
+            setPiWallpaper.addEventListener('click', () => this.setPiWallpaper());
         }
 
         // WiFi Controls
