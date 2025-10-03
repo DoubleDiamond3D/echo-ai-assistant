@@ -245,6 +245,17 @@ class EchoDashboard {
         return defaultSettings;
     }
 
+    // Helper function to get camera name from device path
+    getCurrentCameraName() {
+        const selectedCamera = document.getElementById('camera-source')?.value || '/dev/video0';
+        if (selectedCamera.includes('video1')) {
+            return 'usb'; // USB camera
+        } else if (selectedCamera.includes('video0')) {
+            return 'head'; // Pi camera
+        }
+        return 'head'; // Default
+    }
+
     saveSettings() {
         // Get all form values
         this.settings.echoApiUrl = document.getElementById('echo-api-url')?.value || 'http://localhost:5000';
@@ -392,13 +403,16 @@ class EchoDashboard {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
 
+            // Get current camera name
+            const cameraName = this.getCurrentCameraName();
+
             const response = await fetch(`${apiUrl}/api/cameras/stop`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ name: 'head' })
+                body: JSON.stringify({ name: cameraName })
             });
 
             if (!response.ok) {
@@ -464,11 +478,14 @@ class EchoDashboard {
             if (response.ok) {
                 const result = await response.json();
 
-                // Update camera feed - use correct streaming endpoint
-                const cameraName = selectedCamera; // Use the camera name directly (head, front, etc.)
-                console.log(`Starting camera: ${cameraName}`);
+                // Get camera name for streaming endpoint
+                const cameraName = this.getCurrentCameraName();
+
+                console.log(`Starting camera: ${selectedCamera} -> ${cameraName}`);
+
+                // Update camera feed with proper API key authentication
                 document.getElementById('camera-feed').innerHTML = `
-                    <img src="${apiUrl}/stream/camera/${cameraName}?t=${Date.now()}" 
+                    <img src="${apiUrl}/stream/camera/${cameraName}?api_key=${encodeURIComponent(apiKey)}&t=${Date.now()}" 
                          class="live-feed" alt="Live Camera Feed" 
                          onload="console.log('Camera ${cameraName} loaded successfully')"
                          onerror="console.error('Camera ${cameraName} failed to load:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
@@ -491,13 +508,16 @@ class EchoDashboard {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
 
+            // Get current camera name
+            const cameraName = this.getCurrentCameraName();
+
             const response = await fetch(`${apiUrl}/api/cameras/capture`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ name: 'head' })
+                body: JSON.stringify({ name: cameraName })
             });
 
             if (response.ok) {
@@ -524,13 +544,16 @@ class EchoDashboard {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
 
+            // Get current camera name
+            const cameraName = this.getCurrentCameraName();
+
             const response = await fetch(`${apiUrl}/api/cameras/record/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ name: 'head' })
+                body: JSON.stringify({ name: cameraName })
             });
 
             if (response.ok) {
@@ -553,13 +576,16 @@ class EchoDashboard {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
 
+            // Get current camera name
+            const cameraName = this.getCurrentCameraName();
+
             const response = await fetch(`${apiUrl}/api/cameras/record/stop`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ name: 'head' })
+                body: JSON.stringify({ name: cameraName })
             });
 
             if (response.ok) {
