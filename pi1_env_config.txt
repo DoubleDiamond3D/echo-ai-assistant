@@ -65,16 +65,16 @@ ECHO_CAMERA_USB_ENABLED=1
 ECHO_CAMERA_PI_FRONT_ENABLED=1
 
 # Camera Configuration (for Echo AI camera service)
-CAM_HEAD=/dev/video0
-CAM_FRONT=/dev/video2
+CAM_HEAD=/dev/video1
+CAM_FRONT=/dev/video0
 CAM_W=1280
 CAM_H=720
 CAM_FPS=30
 
 # Legacy camera settings
-ECHO_CAMERA_USB_DEVICE=/dev/video0
+ECHO_CAMERA_USB_DEVICE=/dev/video1
 ECHO_CAMERA_USB_NAME="PC-LM1E"
-ECHO_CAMERA_PI_FRONT_DEVICE=/dev/video2
+ECHO_CAMERA_PI_FRONT_DEVICE=/dev/video0
 
 # Camera Settings
 ECHO_CAMERA_DEFAULT=usb
