@@ -117,8 +117,6 @@ class EchoDashboard {
         const scanWifi = document.getElementById('scan-wifi');
         const refreshWifi = document.getElementById('refresh-wifi');
         const connectWifi = document.getElementById('connect-wifi');
-        const wifiScanBtn = document.getElementById('wifi-scan-btn');
-
         if (scanWifi) {
             scanWifi.addEventListener('click', () => this.scanWiFiNetworks());
         }
@@ -128,14 +126,10 @@ class EchoDashboard {
         if (connectWifi) {
             connectWifi.addEventListener('click', () => this.connectToWiFi());
         }
-        if (wifiScanBtn) {
-            wifiScanBtn.addEventListener('click', () => this.scanWiFiNetworks());
-        }
 
         // Bluetooth Controls
         const scanBluetooth = document.getElementById('scan-bluetooth');
         const refreshBluetooth = document.getElementById('refresh-bluetooth');
-        const bluetoothScanBtn = document.getElementById('bluetooth-scan-btn');
         const bluetoothEnabled = document.getElementById('bluetooth-enabled');
 
         if (scanBluetooth) {
@@ -143,9 +137,6 @@ class EchoDashboard {
         }
         if (refreshBluetooth) {
             refreshBluetooth.addEventListener('click', () => this.scanBluetoothDevices());
-        }
-        if (bluetoothScanBtn) {
-            bluetoothScanBtn.addEventListener('click', () => this.scanBluetoothDevices());
         }
         if (bluetoothEnabled) {
             bluetoothEnabled.addEventListener('change', () => this.toggleBluetooth());
