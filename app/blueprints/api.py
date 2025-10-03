@@ -619,11 +619,20 @@ def scan_bluetooth() -> Response:
         import subprocess
         import json
         
+        # Debug: Let's see what Bluetooth commands are available
+        debug_info = {"attempts": []}
+        
         # Use bluetoothctl to scan for devices
         try:
             # Start scanning
             scan_result = subprocess.run(['bluetoothctl', 'scan', 'on'], 
                                        capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "bluetoothctl scan on",
+                "returncode": scan_result.returncode,
+                "stdout": scan_result.stdout[:200],
+                "stderr": scan_result.stderr[:200]
+            })
             
             # Wait a bit for devices to be discovered
             import time
@@ -632,6 +641,12 @@ def scan_bluetooth() -> Response:
             # Get discovered devices
             devices_result = subprocess.run(['bluetoothctl', 'devices'], 
                                           capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "bluetoothctl devices",
+                "returncode": devices_result.returncode,
+                "stdout": devices_result.stdout[:500],
+                "stderr": devices_result.stderr[:200]
+            })
             
             if devices_result.returncode == 0:
                 devices = []
@@ -651,12 +666,16 @@ def scan_bluetooth() -> Response:
                 subprocess.run(['bluetoothctl', 'scan', 'off'], 
                              capture_output=True, text=True, timeout=5)
                 
-                return jsonify({"devices": devices})
+                return jsonify({"devices": devices, "debug": debug_info})
             else:
-                return jsonify({"devices": []})
+                return jsonify({"devices": [], "debug": debug_info})
                 
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            return jsonify({"devices": []})
+        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+            debug_info["attempts"].append({
+                "command": "bluetoothctl",
+                "error": str(e)
+            })
+            return jsonify({"devices": [], "debug": debug_info})
         
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500

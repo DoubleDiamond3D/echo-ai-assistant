@@ -1016,6 +1016,9 @@ class EchoDashboard {
             if (response.ok) {
                 const data = await response.json();
                 console.log('WiFi scan response:', data);
+                if (data.debug) {
+                    console.log('WiFi debug info:', data.debug);
+                }
                 this.updateWiFiNetworks(data.networks || []);
                 this.showNotification('WiFi scan completed', 'success');
             } else {
@@ -1105,6 +1108,9 @@ class EchoDashboard {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Bluetooth scan response:', data);
+                if (data.debug) {
+                    console.log('Bluetooth debug info:', data.debug);
+                }
                 this.updateBluetoothDevices(data.devices || []);
                 this.showNotification('Bluetooth scan completed', 'success');
             } else {
