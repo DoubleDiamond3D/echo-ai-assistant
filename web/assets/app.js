@@ -214,7 +214,7 @@ class EchoDashboard {
     loadSettings() {
         const defaultSettings = {
             echoApiUrl: 'http://localhost:5000',
-            echoApiKey: '',
+            echoApiKey: 'echo-dev-kit-2025',
             openaiKey: 'change this',
             anthropicKey: 'change this',
             ollamaUrl: 'http://localhost:11434',
@@ -249,25 +249,22 @@ class EchoDashboard {
     // Helper function to get camera name from device path
     getCurrentCameraName() {
         const selectedCamera = document.getElementById('camera-source')?.value || '/dev/video0';
+        // For now, only USB camera on /dev/video0
         if (selectedCamera.includes('video0')) {
             return 'usb'; // USB camera (PC-LM1E) is on /dev/video0
-        } else if (selectedCamera.includes('video1')) {
-            return 'head'; // Pi camera (CSI) is on /dev/video1
         }
-        return 'usb'; // Default to USB camera since it's working
+        // Default to USB camera since it's the only one working
+        return 'usb';
     }
 
     // Detect available cameras and populate dropdown
     async detectAvailableCameras() {
-        // Pi Camera v1 (OV5647) detected but needs legacy camera enable
-        // USB Camera is working on /dev/video0
+        // Only USB Camera for now - Pi Camera commented out until properly configured
         const defaultCameras = [
-            { device: '/dev/video0', name: 'USB Camera (PC-LM1E)', available: true },
-            { device: '/dev/video1', name: 'Pi Camera v1 (OV5647)', available: false } // Will be available after legacy camera enable
+            { device: '/dev/video0', name: 'USB Camera (PC-LM1E)', available: true }
         ];
 
-        // Note: Pi camera will be available after running:
-        // echo "start_x=1" | sudo tee -a /boot/config.txt && sudo reboot
+        // Pi Camera will be added later when hardware is working
 
         this.populateCameraDropdown(defaultCameras);
 
@@ -535,18 +532,13 @@ class EchoDashboard {
     async startCamera(cameraDevice = null) {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'echo-dev-kit-2025';
 
-            // Use selected camera or default
+            // Use selected camera or default to USB camera
             const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
 
-            // Get camera name for streaming endpoint based on the selected camera
-            let cameraName = 'head'; // Default
-            if (selectedCamera.includes('video1')) {
-                cameraName = 'usb'; // USB camera
-            } else if (selectedCamera.includes('video0')) {
-                cameraName = 'head'; // Pi camera
-            }
+            // Get camera name for streaming endpoint - USB camera maps to 'usb'
+            const cameraName = 'usb'; // Simplified: only USB camera for now
 
             console.log(`Starting camera: ${selectedCamera} -> ${cameraName}`);
 
