@@ -74,6 +74,13 @@ class EchoDashboard {
             });
         }
 
+        // System Controls (reboot button)
+        const rebootSystem = document.getElementById('reboot-system');
+
+        if (rebootSystem) {
+            rebootSystem.addEventListener('click', () => this.rebootSystem());
+        }
+
         // Chat Interface
         const chatInput = document.getElementById('chat-input');
         const sendMessage = document.getElementById('send-message');
@@ -272,7 +279,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const settingsPayload = {
                 voice_enabled: this.settings.voiceEnabled,
                 voice_output_enabled: this.settings.voiceOutputEnabled,
@@ -283,7 +290,7 @@ class EchoDashboard {
                 anthropic_key: this.settings.anthropicKey !== 'change this' ? this.settings.anthropicKey : '',
                 ollama_url: this.settings.ollamaUrl
             };
-            
+
             const response = await fetch(`${apiUrl}/api/settings`, {
                 method: 'POST',
                 headers: {
@@ -296,11 +303,11 @@ class EchoDashboard {
             if (!response.ok) {
                 throw new Error(`Failed to save settings: ${response.status}`);
             }
-            
+
             const result = await response.json();
             console.log('Settings saved to server:', result);
-            
-  } catch (error) {
+
+        } catch (error) {
             console.error('Error saving settings:', error);
             this.showNotification(`Failed to save settings: ${error.message}`, 'error');
         }
@@ -369,9 +376,9 @@ class EchoDashboard {
         if (document.getElementById('bluetooth-enabled')) {
             document.getElementById('bluetooth-enabled').checked = this.settings.bluetoothEnabled;
         }
-}
+    }
 
-// Camera Functions
+    // Camera Functions
     async toggleCamera() {
         if (this.cameraActive) {
             await this.stopCamera();
@@ -384,7 +391,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/cameras/stop`, {
                 method: 'POST',
                 headers: {
@@ -393,14 +400,14 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ name: 'head' })
             });
-            
+
             if (!response.ok) {
                 console.warn(`Failed to stop camera service: ${response.status}`);
             }
         } catch (error) {
             console.warn('Error stopping camera service:', error);
         }
-        
+
         const cameraFeed = document.getElementById('camera-feed');
         cameraFeed.innerHTML = `
             <div class="camera-placeholder">
@@ -408,7 +415,7 @@ class EchoDashboard {
                 <p>Click "Start Camera" to begin live feed</p>
             </div>
         `;
-        
+
         this.cameraActive = false;
         document.getElementById('camera-toggle').textContent = 'Start Camera';
         this.showNotification('Camera stopped', 'info');
@@ -417,17 +424,17 @@ class EchoDashboard {
     async switchCamera() {
         const cameraSource = document.getElementById('camera-source');
         const selectedCamera = cameraSource.value;
-        
+
         // If camera is currently active, restart it with new source
         if (this.cameraActive) {
             await this.stopCamera();
-            
+
             // Brief delay to ensure camera is fully stopped
             setTimeout(async () => {
                 await this.startCamera(selectedCamera);
             }, 500);
         }
-        
+
         // Update camera name display
         const cameraName = cameraSource.options[cameraSource.selectedIndex].text;
         this.showNotification(`Switched to ${cameraName}`, 'info');
@@ -437,17 +444,17 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             // Use selected camera or default
             const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
-            
+
             const response = await fetch(`${apiUrl}/api/cameras/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     camera: selectedCamera,
                     resolution: '1280x720',
                     fps: 30
@@ -456,15 +463,17 @@ class EchoDashboard {
 
             if (response.ok) {
                 const result = await response.json();
-                
+
                 // Update camera feed - use correct streaming endpoint
                 const cameraName = selectedCamera.includes('video0') ? 'head' : 'front';
+                console.log(`Starting camera: ${cameraName} from device: ${selectedCamera}`);
                 document.getElementById('camera-feed').innerHTML = `
                     <img src="${apiUrl}/stream/camera/${cameraName}?t=${Date.now()}" 
                          class="live-feed" alt="Live Camera Feed" 
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
+                         onload="console.log('Camera loaded successfully')"
+                         onerror="console.error('Camera failed to load:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
                 `;
-                
+
                 this.cameraActive = true;
                 document.getElementById('camera-toggle').textContent = 'Stop Camera';
                 this.showNotification('Camera started successfully!', 'success');
@@ -481,7 +490,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/cameras/capture`, {
                 method: 'POST',
                 headers: {
@@ -490,13 +499,13 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ name: 'head' })
             });
-            
+
             if (response.ok) {
                 this.showNotification('Photo captured!', 'success');
             } else {
                 throw new Error('Failed to capture photo');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error capturing photo:', error);
             this.showNotification('Failed to capture photo', 'error');
         }
@@ -505,7 +514,7 @@ class EchoDashboard {
     async toggleRecording() {
         if (this.recording) {
             await this.stopRecording();
-    } else {
+        } else {
             await this.startRecording();
         }
     }
@@ -514,7 +523,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/cameras/record/start`, {
                 method: 'POST',
                 headers: {
@@ -523,17 +532,17 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ name: 'head' })
             });
-            
+
             if (response.ok) {
                 this.recording = true;
                 document.getElementById('camera-record').textContent = '⏹️';
                 document.getElementById('start-recording').textContent = 'Stop Recording';
                 document.getElementById('stop-recording').style.display = 'inline-block';
                 this.showNotification('Recording started', 'success');
-    } else {
+            } else {
                 throw new Error('Failed to start recording');
-    }
-  } catch (error) {
+            }
+        } catch (error) {
             console.error('Error starting recording:', error);
             this.showNotification('Failed to start recording', 'error');
         }
@@ -543,7 +552,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/cameras/record/stop`, {
                 method: 'POST',
                 headers: {
@@ -552,7 +561,7 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ name: 'head' })
             });
-            
+
             if (response.ok) {
                 this.recording = false;
                 document.getElementById('camera-record').textContent = '🔴';
@@ -562,7 +571,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to stop recording');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error stopping recording:', error);
             this.showNotification('Failed to stop recording', 'error');
         }
@@ -573,13 +582,13 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             if (this.settings.voiceEnabled) {
                 const response = await fetch(`${apiUrl}/api/voice/stop`, {
                     method: 'POST',
                     headers: { 'X-API-Key': apiKey }
                 });
-                
+
                 if (response.ok) {
                     this.settings.voiceEnabled = false;
                     this.showNotification('Voice input stopped', 'info');
@@ -591,7 +600,7 @@ class EchoDashboard {
                     method: 'POST',
                     headers: { 'X-API-Key': apiKey }
                 });
-                
+
                 if (response.ok) {
                     this.settings.voiceEnabled = true;
                     this.showNotification('Voice input started', 'success');
@@ -599,9 +608,9 @@ class EchoDashboard {
                     throw new Error('Failed to start voice input');
                 }
             }
-            
+
             this.saveSettings();
-  } catch (error) {
+        } catch (error) {
             console.error('Error toggling voice input:', error);
             this.showNotification(`Voice control error: ${error.message}`, 'error');
         }
@@ -611,13 +620,13 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             if (this.settings.wakeWordEnabled) {
                 const response = await fetch(`${apiUrl}/api/wake-word/stop`, {
                     method: 'POST',
                     headers: { 'X-API-Key': apiKey }
                 });
-                
+
                 if (response.ok) {
                     this.settings.wakeWordEnabled = false;
                     this.showNotification('Wake word detection stopped', 'info');
@@ -629,7 +638,7 @@ class EchoDashboard {
                     method: 'POST',
                     headers: { 'X-API-Key': apiKey }
                 });
-                
+
                 if (response.ok) {
                     this.settings.wakeWordEnabled = true;
                     this.showNotification('Wake word detection started', 'success');
@@ -637,9 +646,9 @@ class EchoDashboard {
                     throw new Error('Failed to start wake word detection');
                 }
             }
-            
+
             this.saveSettings();
-  } catch (error) {
+        } catch (error) {
             console.error('Error toggling wake word:', error);
             this.showNotification(`Wake word control error: ${error.message}`, 'error');
         }
@@ -660,17 +669,17 @@ class EchoDashboard {
     async sendChatMessage() {
         const chatInput = document.getElementById('chat-input');
         const message = chatInput.value.trim();
-        
+
         if (!message) return;
-        
+
         // Add user message to chat
         this.addChatMessage(message, 'user');
         chatInput.value = '';
-        
+
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/ai/chat`, {
                 method: 'POST',
                 headers: {
@@ -679,14 +688,14 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ message: message })
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 this.addChatMessage(data.response, 'assistant');
             } else {
                 throw new Error('Failed to get AI response');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error sending chat message:', error);
             this.addChatMessage('Sorry, I encountered an error. Please try again.', 'assistant');
         }
@@ -704,20 +713,20 @@ class EchoDashboard {
     // Media Functions
     async handleMediaUpload(file) {
         if (!file) return;
-        
+
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const formData = new FormData();
             formData.append('file', file);
-            
+
             const response = await fetch(`${apiUrl}/api/media/upload`, {
                 method: 'POST',
                 headers: { 'X-API-Key': apiKey },
                 body: formData
             });
-            
+
             if (response.ok) {
                 const mediaDisplay = document.getElementById('media-display');
                 if (file.type.startsWith('image/')) {
@@ -729,7 +738,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to upload media');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error uploading media:', error);
             this.showNotification('Failed to upload media', 'error');
         }
@@ -750,15 +759,15 @@ class EchoDashboard {
             const mediaDisplay = document.getElementById('media-display');
             const img = mediaDisplay.querySelector('img');
             const video = mediaDisplay.querySelector('video');
-            
+
             if (!img && !video) {
                 this.showNotification('Please upload an image or video first', 'warning');
                 return;
             }
-            
+
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             // Get the file from the media display
             let file;
             if (img) {
@@ -770,24 +779,24 @@ class EchoDashboard {
                 const response = await fetch(video.src);
                 file = await response.blob();
             }
-            
+
             // Upload to Pi
             const formData = new FormData();
             formData.append('file', file, `wallpaper.${img ? 'jpg' : 'mp4'}`);
             formData.append('type', img ? 'image' : 'video');
-            
+
             const uploadResponse = await fetch(`${apiUrl}/api/pi/wallpaper/upload`, {
                 method: 'POST',
                 headers: { 'X-API-Key': apiKey },
                 body: formData
             });
-            
+
             if (uploadResponse.ok) {
                 this.showNotification('Pi wallpaper uploaded successfully!', 'success');
             } else {
                 throw new Error('Failed to upload wallpaper to Pi');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error setting Pi wallpaper:', error);
             this.showNotification('Failed to set Pi wallpaper', 'error');
         }
@@ -799,12 +808,12 @@ class EchoDashboard {
             this.showNotification('Scanning for WiFi networks...', 'info');
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/wifi/scan`, {
                 method: 'GET',
                 headers: { 'X-API-Key': apiKey }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 this.updateWiFiNetworks(data.networks || []);
@@ -812,7 +821,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to scan WiFi networks');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error scanning WiFi:', error);
             this.showNotification('Failed to scan WiFi networks', 'error');
         }
@@ -823,12 +832,12 @@ class EchoDashboard {
         if (!wifiList) return;
 
         wifiList.innerHTML = '';
-        
+
         if (networks.length === 0) {
             wifiList.innerHTML = '<div class="network-item"><div class="network-info"><div class="network-name">No networks found</div></div></div>';
-    return;
-  }
-  
+            return;
+        }
+
         networks.forEach(network => {
             const networkItem = document.createElement('div');
             networkItem.className = 'network-item';
@@ -851,16 +860,16 @@ class EchoDashboard {
     async connectToWiFi() {
         const ssid = document.getElementById('wifi-ssid').value;
         const password = document.getElementById('wifi-password').value;
-        
+
         if (!ssid) {
             this.showNotification('Please enter a network name', 'error');
             return;
         }
-        
+
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/wifi/connect`, {
                 method: 'POST',
                 headers: {
@@ -869,13 +878,13 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ ssid: ssid, password: password })
             });
-            
+
             if (response.ok) {
                 this.showNotification(`Connecting to ${ssid}...`, 'info');
             } else {
                 throw new Error('Failed to connect to WiFi');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error connecting to WiFi:', error);
             this.showNotification('Failed to connect to WiFi', 'error');
         }
@@ -887,12 +896,12 @@ class EchoDashboard {
             this.showNotification('Scanning for Bluetooth devices...', 'info');
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/bluetooth/scan`, {
                 method: 'GET',
                 headers: { 'X-API-Key': apiKey }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 this.updateBluetoothDevices(data.devices || []);
@@ -900,7 +909,7 @@ class EchoDashboard {
             } else {
                 throw new Error('Failed to scan Bluetooth devices');
             }
-  } catch (error) {
+        } catch (error) {
             console.error('Error scanning Bluetooth:', error);
             this.showNotification('Failed to scan Bluetooth devices', 'error');
         }
@@ -911,11 +920,11 @@ class EchoDashboard {
         if (!bluetoothList) return;
 
         bluetoothList.innerHTML = '';
-        
+
         if (devices.length === 0) {
             bluetoothList.innerHTML = '<div class="bluetooth-device"><div class="device-info"><div class="device-icon">📱</div><div class="device-details"><div class="device-name">No devices found</div></div></div></div>';
-    return;
-  }
+            return;
+        }
 
         devices.forEach(device => {
             const deviceItem = document.createElement('div');
@@ -938,7 +947,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/bluetooth/connect`, {
                 method: 'POST',
                 headers: {
@@ -947,13 +956,13 @@ class EchoDashboard {
                 },
                 body: JSON.stringify({ device_id: deviceId })
             });
-            
+
             if (response.ok) {
                 this.showNotification('Connecting to device...', 'info');
             } else {
                 throw new Error('Failed to connect to device');
-    }
-  } catch (error) {
+            }
+        } catch (error) {
             console.error('Error connecting to device:', error);
             this.showNotification('Failed to connect to device', 'error');
         }
@@ -971,12 +980,12 @@ class EchoDashboard {
             this.showNotification('Creating backup...', 'info');
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/system/backup`, {
                 method: 'POST',
                 headers: { 'X-API-Key': apiKey }
             });
-            
+
             if (response.ok) {
                 this.showNotification('Backup created successfully!', 'success');
             } else {
@@ -997,18 +1006,18 @@ class EchoDashboard {
             try {
                 const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
                 const apiKey = this.settings.echoApiKey || 'web-interface';
-                
+
                 const response = await fetch(`${apiUrl}/api/system/restart`, {
                     method: 'POST',
                     headers: { 'X-API-Key': apiKey }
                 });
-                
+
                 if (response.ok) {
                     this.showNotification('System restarting...', 'info');
                 } else {
                     throw new Error('Failed to restart system');
                 }
-  } catch (error) {
+            } catch (error) {
                 console.error('Error restarting system:', error);
                 this.showNotification('Failed to restart system', 'error');
             }
@@ -1072,6 +1081,51 @@ class EchoDashboard {
         this.showNotification('Cloudflare tunnel test not yet implemented', 'info');
     }
 
+    async rebootSystem() {
+        if (!confirm('Are you sure you want to reboot both Pis? This will take 2-3 minutes and restart all services.')) {
+            return;
+        }
+
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'web-interface';
+
+            this.showNotification('Rebooting both Pi systems...', 'info');
+
+            // Reboot both Pis
+            const response = await fetch(`${apiUrl}/api/system/reboot`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                }
+            });
+
+            if (response.ok) {
+                this.showNotification('System reboot initiated. Please wait 2-3 minutes...', 'success');
+
+                // Show countdown and reload page
+                let countdown = 180; // 3 minutes
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        this.showNotification(`System rebooting... Reloading in ${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')}`, 'info');
+                    } else {
+                        clearInterval(countdownInterval);
+                        location.reload();
+                    }
+                }, 1000);
+
+            } else {
+                throw new Error('Failed to reboot systems');
+            }
+
+        } catch (error) {
+            console.error('Error rebooting system:', error);
+            this.showNotification('Failed to reboot system', 'error');
+        }
+    }
+
     // Status Functions
     startStatusUpdates() {
         setInterval(() => {
@@ -1084,7 +1138,7 @@ class EchoDashboard {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'web-interface';
-            
+
             const response = await fetch(`${apiUrl}/api/status`, {
                 method: 'GET',
                 headers: { 'X-API-Key': apiKey }
@@ -1143,11 +1197,11 @@ class EchoDashboard {
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             notification.classList.add('show');
         }, 100);
-        
+
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => {

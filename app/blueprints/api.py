@@ -5,7 +5,7 @@ import time
 import os
 from typing import Any, Dict
 
-from flask import Blueprint, Response, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request, send_file
 
 from app.utils.auth import require_api_key
 from app.services.wake_word_service import get_wake_word_status, start_wake_word_detection, stop_wake_word_detection
@@ -684,7 +684,7 @@ def connect_bluetooth() -> Response:
 @api_bp.post("/pi/wallpaper/upload")
 @require_api_key
 def upload_pi_wallpaper() -> Response:
-    """Upload wallpaper for Pi display"""
+    """Upload wallpaper for Pi display and auto-sync to Pi #2"""
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
@@ -708,9 +708,56 @@ def upload_pi_wallpaper() -> Response:
         file_path = os.path.join(wallpaper_dir, filename)
         file.save(file_path)
         
-        return jsonify({"ok": True, "message": f"Wallpaper saved as {filename}", "path": file_path})
+        # Auto-sync to Pi #2 immediately
+        sync_result = _sync_wallpaper_to_pi2(file_path, filename)
+        
+        response_msg = f"Wallpaper saved as {filename}"
+        if sync_result["success"]:
+            response_msg += f" and synced to Pi #2"
+        else:
+            response_msg += f" (sync to Pi #2 failed: {sync_result['error']})"
+        
+        return jsonify({
+            "ok": True, 
+            "message": response_msg, 
+            "path": file_path,
+            "sync_status": sync_result
+        })
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
+
+
+def _sync_wallpaper_to_pi2(file_path: str, filename: str) -> dict:
+    """Sync wallpaper to Pi #2 immediately"""
+    import requests
+    import subprocess
+    
+    # Get Pi #2 IP from environment
+    pi2_ip = os.environ.get('ECHO_FACE_PI_IP', '192.168.68.63')
+    
+    try:
+        # Method 1: Try SCP (fastest)
+        scp_cmd = [
+            'scp', '-o', 'ConnectTimeout=10', '-o', 'StrictHostKeyChecking=no',
+            file_path, f'pi@{pi2_ip}:/opt/echo-ai/wallpapers/{filename}'
+        ]
+        
+        result = subprocess.run(scp_cmd, capture_output=True, timeout=30)
+        if result.returncode == 0:
+            return {"success": True, "method": "scp"}
+        
+        # Method 2: Try HTTP if Pi #2 has a simple receiver (fallback)
+        # For now, just return SCP result
+        return {
+            "success": False, 
+            "error": f"SCP failed: {result.stderr.decode() if result.stderr else 'Unknown error'}",
+            "method": "scp"
+        }
+        
+    except subprocess.TimeoutExpired:
+        return {"success": False, "error": "SCP timeout", "method": "scp"}
+    except Exception as e:
+        return {"success": False, "error": str(e), "method": "scp"}
 
 
 @api_bp.get("/pi/wallpaper/current")
@@ -718,17 +765,53 @@ def upload_pi_wallpaper() -> Response:
 def get_current_pi_wallpaper() -> Response:
     """Get current Pi wallpaper info"""
     try:
-        settings = current_app.config.get("settings")
-        wallpaper_path = getattr(settings, 'pi_wallpaper', None)
+        wallpaper_dir = "/opt/echo-ai/wallpapers"
         
-        if wallpaper_path and os.path.exists(wallpaper_path):
+        # Check for image wallpaper
+        image_path = os.path.join(wallpaper_dir, "wallpaper.jpg")
+        video_path = os.path.join(wallpaper_dir, "wallpaper.mp4")
+        
+        if os.path.exists(image_path):
+            stat = os.stat(image_path)
             return jsonify({
                 "has_wallpaper": True,
-                "path": wallpaper_path,
-                "type": "video" if wallpaper_path.endswith('.mp4') else "image"
+                "path": image_path,
+                "type": "image",
+                "size": stat.st_size,
+                "modified": stat.st_mtime
+            })
+        elif os.path.exists(video_path):
+            stat = os.stat(video_path)
+            return jsonify({
+                "has_wallpaper": True,
+                "path": video_path,
+                "type": "video",
+                "size": stat.st_size,
+                "modified": stat.st_mtime
             })
         else:
             return jsonify({"has_wallpaper": False})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.get("/pi/wallpaper/download/<filename>")
+@require_api_key
+def download_pi_wallpaper(filename: str) -> Response:
+    """Download wallpaper file for Pi #2"""
+    try:
+        # Security check - only allow specific filenames
+        allowed_files = ["wallpaper.jpg", "wallpaper.mp4", "wallpaper.png"]
+        if filename not in allowed_files:
+            return jsonify({"error": "Invalid filename"}), 400
+        
+        wallpaper_dir = "/opt/echo-ai/wallpapers"
+        file_path = os.path.join(wallpaper_dir, filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({"error": "File not found"}), 404
+        
+        return send_file(file_path, as_attachment=True, download_name=filename)
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
@@ -763,6 +846,36 @@ def restart_system() -> Response:
         # For now, return success - this would need to be implemented
         # using system commands like systemctl
         return jsonify({"ok": True, "message": "System restart not yet implemented"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@api_bp.post("/system/reboot")
+@require_api_key
+def reboot_system() -> Response:
+    """Reboot both Pi systems"""
+    try:
+        import subprocess
+        import threading
+        
+        def reboot_both_pis():
+            try:
+                # Reboot Pi #2 first
+                subprocess.run(['ssh', 'echo2@192.168.68.63', 'sudo reboot'], timeout=10)
+            except:
+                pass  # Pi #2 might not be reachable
+            
+            # Wait a moment then reboot Pi #1 (this Pi)
+            import time
+            time.sleep(2)
+            subprocess.run(['sudo', 'reboot'], timeout=5)
+        
+        # Start reboot in background thread so we can return response first
+        thread = threading.Thread(target=reboot_both_pis)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({"ok": True, "message": "System reboot initiated"})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
