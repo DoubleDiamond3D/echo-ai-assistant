@@ -489,8 +489,28 @@ def scan_wifi() -> Response:
         # Debug: Let's see what commands are available and what they return
         debug_info = {"attempts": []}
         
-        # First, try to bring up the WiFi interface
+        # First, unblock WiFi with rfkill and bring up the interface
         try:
+            # Unblock WiFi with rfkill
+            rfkill_result = subprocess.run(['sudo', 'rfkill', 'unblock', 'wifi'], 
+                                         capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "sudo rfkill unblock wifi",
+                "returncode": rfkill_result.returncode,
+                "stdout": rfkill_result.stdout[:200],
+                "stderr": rfkill_result.stderr[:200]
+            })
+            
+            # Also unblock all wireless devices
+            rfkill_all_result = subprocess.run(['sudo', 'rfkill', 'unblock', 'all'], 
+                                             capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "sudo rfkill unblock all",
+                "returncode": rfkill_all_result.returncode,
+                "stdout": rfkill_all_result.stdout[:200],
+                "stderr": rfkill_all_result.stderr[:200]
+            })
+            
             # Enable WiFi interface
             enable_result = subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'up'], 
                                          capture_output=True, text=True, timeout=10)
@@ -502,7 +522,7 @@ def scan_wifi() -> Response:
             })
         except Exception as e:
             debug_info["attempts"].append({
-                "command": "sudo ip link set wlan0 up",
+                "command": "WiFi enable sequence",
                 "error": str(e)
             })
         
@@ -653,6 +673,23 @@ def scan_bluetooth() -> Response:
         
         # Debug: Let's see what Bluetooth commands are available
         debug_info = {"attempts": []}
+        
+        # First, unblock Bluetooth with rfkill
+        try:
+            # Unblock Bluetooth with rfkill
+            rfkill_result = subprocess.run(['sudo', 'rfkill', 'unblock', 'bluetooth'], 
+                                         capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "sudo rfkill unblock bluetooth",
+                "returncode": rfkill_result.returncode,
+                "stdout": rfkill_result.stdout[:200],
+                "stderr": rfkill_result.stderr[:200]
+            })
+        except Exception as e:
+            debug_info["attempts"].append({
+                "command": "sudo rfkill unblock bluetooth",
+                "error": str(e)
+            })
         
         # Use bluetoothctl to scan for devices
         try:
