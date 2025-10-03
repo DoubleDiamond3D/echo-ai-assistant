@@ -1,51 +1,22 @@
-version: '3.8'
-
 services:
-  # Ollama AI Server
-  ollama:
-    image: ollama/ollama:latest
-    container_name: echo-ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-  # Speech Processing Server
+  # Speech Processing Server (uses your existing Ollama)
   speech-server:
     build: ./speech-server
     container_name: echo-speech
     ports:
-      - "8080:8080"
+      - "5001:8080"
     volumes:
       - ./models:/app/models
       - ./audio_cache:/app/audio_cache
     environment:
-      - OLLAMA_URL=http://ollama:11434
-      - STT_MODEL=openai/whisper-large-v3
-      - TTS_MODEL=coqui-tts
-      - DEVICE=cuda
-    depends_on:
-      - ollama
+      - OLLAMA_URL=http://192.168.68.55:11434
+      - STT_MODEL=base
+      - DEVICE=cpu
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  # Redis for caching and session management
+  # Redis for caching
   redis:
     image: redis:7-alpine
     container_name: echo-redis
@@ -56,5 +27,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  ollama_data:
   redis_data:
