@@ -489,8 +489,40 @@ def scan_wifi() -> Response:
         # Debug: Let's see what commands are available and what they return
         debug_info = {"attempts": []}
         
-        # Try nmcli first (NetworkManager)
+        # First, try to bring up the WiFi interface
         try:
+            # Enable WiFi interface
+            enable_result = subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'up'], 
+                                         capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "sudo ip link set wlan0 up",
+                "returncode": enable_result.returncode,
+                "stdout": enable_result.stdout[:200],
+                "stderr": enable_result.stderr[:200]
+            })
+        except Exception as e:
+            debug_info["attempts"].append({
+                "command": "sudo ip link set wlan0 up",
+                "error": str(e)
+            })
+        
+        # Try nmcli first (NetworkManager) - with rescan
+        try:
+            # Force a rescan first
+            rescan_result = subprocess.run(['nmcli', 'device', 'wifi', 'rescan'], 
+                                         capture_output=True, text=True, timeout=15)
+            debug_info["attempts"].append({
+                "command": "nmcli device wifi rescan",
+                "returncode": rescan_result.returncode,
+                "stdout": rescan_result.stdout[:200],
+                "stderr": rescan_result.stderr[:200]
+            })
+            
+            # Wait a moment for scan to complete
+            import time
+            time.sleep(3)
+            
+            # Now list networks
             result = subprocess.run(['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list'], 
                                   capture_output=True, text=True, timeout=30)
             debug_info["attempts"].append({
@@ -500,7 +532,7 @@ def scan_wifi() -> Response:
                 "stderr": result.stderr[:500]
             })
             
-            if result.returncode == 0:
+            if result.returncode == 0 and result.stdout.strip():
                 networks = []
                 for line in result.stdout.strip().split('\n'):
                     if line and not line.startswith('--'):
@@ -519,17 +551,17 @@ def scan_wifi() -> Response:
                 "error": str(e)
             })
         
-        # Fallback to iwlist
+        # Fallback to iwlist with specific interface
         try:
-            result = subprocess.run(['iwlist', 'scan'], capture_output=True, text=True, timeout=30)
+            result = subprocess.run(['sudo', 'iwlist', 'wlan0', 'scan'], capture_output=True, text=True, timeout=30)
             debug_info["attempts"].append({
-                "command": "iwlist scan",
+                "command": "sudo iwlist wlan0 scan",
                 "returncode": result.returncode,
                 "stdout": result.stdout[:500],  # First 500 chars
                 "stderr": result.stderr[:500]
             })
             
-            if result.returncode == 0:
+            if result.returncode == 0 and 'Cell' in result.stdout:
                 networks = []
                 lines = result.stdout.split('\n')
                 current_network = {}
@@ -560,7 +592,7 @@ def scan_wifi() -> Response:
                     return jsonify({"networks": networks, "debug": debug_info})
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             debug_info["attempts"].append({
-                "command": "iwlist scan",
+                "command": "sudo iwlist wlan0 scan",
                 "error": str(e)
             })
         
