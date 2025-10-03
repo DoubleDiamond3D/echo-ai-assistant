@@ -214,7 +214,7 @@ class EchoDashboard {
     loadSettings() {
         const defaultSettings = {
             echoApiUrl: 'http://localhost:5000',
-            echoApiKey: 'echo-dev-kit-2025',
+            echoApiKey: 'Lolo6750',
             openaiKey: 'change this',
             anthropicKey: 'change this',
             ollamaUrl: 'http://localhost:11434',
@@ -249,17 +249,17 @@ class EchoDashboard {
     // Helper function to get camera name from device path
     getCurrentCameraName() {
         const selectedCamera = document.getElementById('camera-source')?.value || '/dev/video0';
-        // For now, only USB camera on /dev/video0
+        // USB camera is on /dev/video0 and maps to 'usb' for streaming
         if (selectedCamera.includes('video0')) {
-            return 'usb'; // USB camera (PC-LM1E) is on /dev/video0
+            return 'usb'; // USB camera (PC-LM1E) maps to 'usb' stream name
         }
-        // Default to USB camera since it's the only one working
+        // Default to USB camera
         return 'usb';
     }
 
     // Detect available cameras and populate dropdown
     async detectAvailableCameras() {
-        // Only USB Camera for now - Pi Camera commented out until properly configured
+        // USB Camera confirmed on /dev/video0 based on v4l2-ctl output
         const defaultCameras = [
             { device: '/dev/video0', name: 'USB Camera (PC-LM1E)', available: true }
         ];
@@ -471,7 +471,7 @@ class EchoDashboard {
     async stopCamera() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
             const cameraName = this.getCurrentCameraName();
@@ -532,7 +532,7 @@ class EchoDashboard {
     async startCamera(cameraDevice = null) {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'echo-dev-kit-2025';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Use selected camera or default to USB camera
             const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
@@ -549,9 +549,7 @@ class EchoDashboard {
                     'X-API-Key': apiKey
                 },
                 body: JSON.stringify({
-                    camera: selectedCamera,
-                    resolution: '1280x720',
-                    fps: 30
+                    name: cameraName  // API expects 'name' parameter with camera name (usb/head)
                 })
             });
 
