@@ -249,12 +249,12 @@ class EchoDashboard {
     // Helper function to get camera name from device path
     getCurrentCameraName() {
         const selectedCamera = document.getElementById('camera-source')?.value || '/dev/video0';
-        // USB camera is on /dev/video0 and maps to 'usb' for streaming
+        // USB camera is on /dev/video0 and maps to 'head' for streaming (common default)
         if (selectedCamera.includes('video0')) {
-            return 'usb'; // USB camera (PC-LM1E) maps to 'usb' stream name
+            return 'head'; // USB camera (PC-LM1E) maps to 'head' stream name
         }
-        // Default to USB camera
-        return 'usb';
+        // Default to head camera
+        return 'head';
     }
 
     // Detect available cameras and populate dropdown
@@ -534,11 +534,27 @@ class EchoDashboard {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
+            // First, let's check what cameras are available
+            console.log('Checking available cameras...');
+            const camerasResponse = await fetch(`${apiUrl}/api/cameras`, {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': apiKey
+                }
+            });
+
+            if (camerasResponse.ok) {
+                const camerasData = await camerasResponse.json();
+                console.log('Available cameras:', camerasData);
+            } else {
+                console.warn('Failed to get camera list:', camerasResponse.status);
+            }
+
             // Use selected camera or default to USB camera
             const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
 
-            // Get camera name for streaming endpoint - USB camera maps to 'usb'
-            const cameraName = 'usb'; // Simplified: only USB camera for now
+            // Try different camera names - the backend might expect 'head' instead of 'usb'
+            let cameraName = 'head'; // Try 'head' first (common default)
 
             console.log(`Starting camera: ${selectedCamera} -> ${cameraName}`);
 
@@ -549,7 +565,7 @@ class EchoDashboard {
                     'X-API-Key': apiKey
                 },
                 body: JSON.stringify({
-                    name: cameraName  // API expects 'name' parameter with camera name (usb/head)
+                    name: cameraName  // API expects 'name' parameter with camera name
                 })
             });
 
