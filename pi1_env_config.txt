@@ -23,8 +23,8 @@ ECHO_AI_FALLBACK_MODEL=deepseek-r1:latest
 ECHO_AI_TEMPERATURE=0.7
 ECHO_MAX_TOKENS=2048
 
-# Speech Processing Server (Docker on PC)
-SPEECH_SERVER_URL=http://192.168.68.55:5001
+# Speech Processing Server (Python on PC)
+SPEECH_SERVER_URL=http://192.168.68.55:8080
 SPEECH_STT_MODEL=whisper-large-v3
 SPEECH_TTS_MODEL=coqui-tts
 SPEECH_VOICE=female-1

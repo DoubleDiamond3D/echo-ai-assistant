@@ -21,8 +21,8 @@ OLLAMA_URL=http://192.168.68.55:11434
 ECHO_AI_MODEL=qwen3:latest
 ECHO_AI_FALLBACK_MODEL=deepseek-r1:latest
 
-# Speech Processing (via Pi #1 and Docker Server)
-SPEECH_SERVER_URL=http://192.168.68.55:5001
+# Speech Processing (via Pi #1 and Python Server)
+SPEECH_SERVER_URL=http://192.168.68.55:8080
 
 # =============================================================================
 # VOICE & AUDIO SETTINGS (Disabled on Pi #2)
