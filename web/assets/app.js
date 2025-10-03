@@ -1047,6 +1047,7 @@ class EchoDashboard {
         networks.forEach(network => {
             const networkItem = document.createElement('div');
             networkItem.className = 'network-item';
+            networkItem.style.cursor = 'pointer';
             networkItem.innerHTML = `
                 <div class="network-info">
                     <div class="network-name">${network.ssid || 'Unknown'}</div>
@@ -1059,6 +1060,23 @@ class EchoDashboard {
                     <div class="signal-bar"></div>
                 </div>
             `;
+
+            // Add click handler to auto-fill network name
+            networkItem.addEventListener('click', () => {
+                const wifiSsidInput = document.getElementById('wifi-ssid');
+                if (wifiSsidInput && network.ssid) {
+                    wifiSsidInput.value = network.ssid;
+                    wifiSsidInput.focus();
+                    this.showNotification(`Selected network: ${network.ssid}`, 'info');
+
+                    // Scroll to the connection form
+                    const connectForm = document.getElementById('wifi-ssid').closest('.form-group');
+                    if (connectForm) {
+                        connectForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            });
+
             wifiList.appendChild(networkItem);
         });
     }
@@ -1086,9 +1104,12 @@ class EchoDashboard {
             });
 
             if (response.ok) {
-                this.showNotification(`Connecting to ${ssid}...`, 'info');
+                const result = await response.json();
+                this.showNotification(result.message || `Connecting to ${ssid}...`, 'info');
             } else {
-                throw new Error('Failed to connect to WiFi');
+                const error = await response.json();
+                console.error('WiFi connect error:', error);
+                throw new Error(error.error || 'Failed to connect to WiFi');
             }
         } catch (error) {
             console.error('Error connecting to WiFi:', error);
@@ -1171,9 +1192,12 @@ class EchoDashboard {
             });
 
             if (response.ok) {
-                this.showNotification('Connecting to device...', 'info');
+                const result = await response.json();
+                this.showNotification(result.message || 'Connecting to device...', 'info');
             } else {
-                throw new Error('Failed to connect to device');
+                const error = await response.json();
+                console.error('Bluetooth connect error:', error);
+                throw new Error(error.error || 'Failed to connect to device');
             }
         } catch (error) {
             console.error('Error connecting to device:', error);

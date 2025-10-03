@@ -1027,3 +1027,25 @@ body::before {
     max-height: 90vh;
   }
 }
+/* Net
+work Item Click Styling */
+.network-item {
+    transition: var(--transition-fast);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs);
+    margin: 2px 0;
+}
+
+.network-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(2px);
+}
+
+.network-item:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(1px);
+}
+
+.network-item .network-name {
+    font-weight: 500;
+}
