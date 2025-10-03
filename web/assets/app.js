@@ -27,6 +27,45 @@ class EchoDashboard {
         return apiUrl;
     }
 
+    // Test API connectivity
+    async testApiConnectivity() {
+        // Show testing message
+        this.showNotification('Testing API connection...', 'info');
+
+        try {
+            const apiUrl = this.getApiUrl();
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
+
+            // Show what we're testing (mobile-friendly)
+            this.showNotification(`Testing: ${apiUrl}/api/status`, 'info');
+
+            const response = await fetch(`${apiUrl}/api/status`, {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': apiKey
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.showNotification(`✅ API connection successful! Status: ${response.status}`, 'success');
+                return true;
+            } else {
+                const errorText = await response.text();
+                this.showNotification(`❌ API test failed: HTTP ${response.status} - ${errorText.substring(0, 100)}`, 'error');
+                return false;
+            }
+        } catch (error) {
+            // Show detailed error for mobile debugging
+            let errorMsg = `❌ Connection Error: ${error.message}`;
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMsg += ' (Network/CORS issue)';
+            }
+            this.showNotification(errorMsg, 'error');
+            return false;
+        }
+    }
+
     setupEventListeners() {
         // Camera Controls
         const cameraToggle = document.getElementById('camera-toggle');
@@ -208,6 +247,12 @@ class EchoDashboard {
         if (testTunnel) {
             testTunnel.addEventListener('click', () => this.testCloudflareTunnel());
         }
+
+        // Test API Connection button
+        const testApiConnection = document.getElementById('test-api-connection');
+        if (testApiConnection) {
+            testApiConnection.addEventListener('click', () => this.testApiConnectivity());
+        }
     }
 
     loadSettings() {
@@ -367,6 +412,9 @@ class EchoDashboard {
             const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
+            console.log('Attempting to save settings to:', `${apiUrl}/api/settings`);
+            console.log('Using API key:', apiKey);
+
             const settingsPayload = {
                 voice_enabled: this.settings.voiceEnabled,
                 voice_output_enabled: this.settings.voiceOutputEnabled,
@@ -378,6 +426,8 @@ class EchoDashboard {
                 ollama_url: this.settings.ollamaUrl
             };
 
+            console.log('Settings payload:', settingsPayload);
+
             const response = await fetch(`${apiUrl}/api/settings`, {
                 method: 'POST',
                 headers: {
@@ -387,23 +437,52 @@ class EchoDashboard {
                 body: JSON.stringify(settingsPayload)
             });
 
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
             if (!response.ok) {
-                throw new Error(`Failed to save settings: ${response.status}`);
+                const errorText = await response.text();
+                console.error('Response error text:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             const result = await response.json();
             console.log('Settings saved to server:', result);
+            this.showNotification('Settings saved successfully!', 'success');
 
         } catch (error) {
             console.error('Error saving settings:', error);
-            this.showNotification(`Failed to save settings: ${error.message}`, 'error');
+            console.error('Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+
+            // Mobile-friendly error messages
+            let errorMsg = `❌ Save Failed: ${error.message}`;
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMsg = '❌ Network Error: Cannot reach API server. Check Cloudflare tunnel Host Header setting.';
+            } else if (error.message.includes('401')) {
+                errorMsg = '❌ Authentication Error: Invalid API key';
+            } else if (error.message.includes('404')) {
+                errorMsg = '❌ API Error: Endpoint not found';
+            } else if (error.message.includes('500')) {
+                errorMsg = '❌ Server Error: Internal server error';
+            }
+
+            this.showNotification(errorMsg, 'error');
         }
     }
 
     updateUI() {
         // Update form values
         if (document.getElementById('echo-api-url')) {
-            document.getElementById('echo-api-url').value = this.settings.echoApiUrl || window.location.origin;
+            const apiUrlField = document.getElementById('echo-api-url');
+            const detectedUrl = window.location.origin;
+            apiUrlField.value = this.settings.echoApiUrl || detectedUrl;
+
+            // Add a small diagnostic message for mobile users
+            apiUrlField.title = `Auto-detected: ${detectedUrl}`;
         }
         if (document.getElementById('echo-api-key')) {
             document.getElementById('echo-api-key').value = this.settings.echoApiKey;
