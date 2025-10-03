@@ -249,22 +249,25 @@ class EchoDashboard {
     // Helper function to get camera name from device path
     getCurrentCameraName() {
         const selectedCamera = document.getElementById('camera-source')?.value || '/dev/video0';
-        // USB camera is on /dev/video0 and maps to 'head' for streaming (common default)
+        // Based on API response: front=/dev/video0 (USB), head=/dev/video1 (Pi)
         if (selectedCamera.includes('video0')) {
-            return 'head'; // USB camera (PC-LM1E) maps to 'head' stream name
+            return 'front'; // USB camera (PC-LM1E) maps to 'front' stream name
+        } else if (selectedCamera.includes('video1')) {
+            return 'head'; // Pi camera maps to 'head' stream name
         }
-        // Default to head camera
-        return 'head';
+        // Default to front camera (USB)
+        return 'front';
     }
 
     // Detect available cameras and populate dropdown
     async detectAvailableCameras() {
-        // USB Camera confirmed on /dev/video0 based on v4l2-ctl output
+        // Based on API response: front=/dev/video0 (USB), head=/dev/video1 (Pi)
         const defaultCameras = [
-            { device: '/dev/video0', name: 'USB Camera (PC-LM1E)', available: true }
+            { device: '/dev/video0', name: 'USB Camera (PC-LM1E) - Front', available: true },
+            { device: '/dev/video1', name: 'Pi Camera (CSI) - Head', available: false } // Pi camera not working
         ];
 
-        // Pi Camera will be added later when hardware is working
+        // Camera mapping: front=/dev/video0 (working), head=/dev/video1 (not working)
 
         this.populateCameraDropdown(defaultCameras);
 
@@ -553,8 +556,9 @@ class EchoDashboard {
             // Use selected camera or default to USB camera
             const selectedCamera = cameraDevice || document.getElementById('camera-source')?.value || '/dev/video0';
 
-            // Try different camera names - the backend might expect 'head' instead of 'usb'
-            let cameraName = 'head'; // Try 'head' first (common default)
+            // Based on camera list: front=/dev/video0 (USB), head=/dev/video1 (Pi)
+            // Your USB camera is the 'front' camera
+            let cameraName = 'front'; // USB camera is mapped as 'front'
 
             console.log(`Starting camera: ${selectedCamera} -> ${cameraName}`);
 
