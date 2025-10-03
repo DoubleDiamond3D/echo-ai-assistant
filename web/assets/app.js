@@ -20,6 +20,13 @@ class EchoDashboard {
         this.detectAvailableCameras();
     }
 
+    // Helper method to get API URL with proper fallback
+    getApiUrl() {
+        const apiUrl = this.settings.echoApiUrl || window.location.origin;
+        console.log('Using API URL:', apiUrl, '(current page origin:', window.location.origin, ')');
+        return apiUrl;
+    }
+
     setupEventListeners() {
         // Camera Controls
         const cameraToggle = document.getElementById('camera-toggle');
@@ -204,8 +211,12 @@ class EchoDashboard {
     }
 
     loadSettings() {
+        // Auto-detect API URL based on current page URL
+        const currentUrl = window.location.origin;
+        const defaultApiUrl = currentUrl; // Use same origin as the web page
+
         const defaultSettings = {
-            echoApiUrl: 'http://localhost:5000',
+            echoApiUrl: defaultApiUrl,
             echoApiKey: 'Lolo6750',
             openaiKey: 'change this',
             anthropicKey: 'change this',
@@ -266,7 +277,7 @@ class EchoDashboard {
         // Future: Try to detect cameras via API when endpoint is available
         /*
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/cameras/list`, {
@@ -323,7 +334,7 @@ class EchoDashboard {
 
     saveSettings() {
         // Get all form values
-        this.settings.echoApiUrl = document.getElementById('echo-api-url')?.value || 'http://localhost:5000';
+        this.settings.echoApiUrl = document.getElementById('echo-api-url')?.value || window.location.origin;
         this.settings.echoApiKey = document.getElementById('echo-api-key')?.value || '';
         this.settings.openaiKey = document.getElementById('openai-key')?.value || 'change this';
         this.settings.anthropicKey = document.getElementById('anthropic-key')?.value || 'change this';
@@ -353,7 +364,7 @@ class EchoDashboard {
 
     async sendSettingsToServer() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const settingsPayload = {
@@ -392,7 +403,7 @@ class EchoDashboard {
     updateUI() {
         // Update form values
         if (document.getElementById('echo-api-url')) {
-            document.getElementById('echo-api-url').value = this.settings.echoApiUrl;
+            document.getElementById('echo-api-url').value = this.settings.echoApiUrl || window.location.origin;
         }
         if (document.getElementById('echo-api-key')) {
             document.getElementById('echo-api-key').value = this.settings.echoApiKey;
@@ -465,7 +476,7 @@ class EchoDashboard {
 
     async stopCamera() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
@@ -526,7 +537,7 @@ class EchoDashboard {
 
     async startCamera(cameraDevice = null) {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // First, let's check what cameras are available
@@ -591,7 +602,7 @@ class EchoDashboard {
 
     async capturePhoto() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
@@ -627,7 +638,7 @@ class EchoDashboard {
 
     async startRecording() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
@@ -659,7 +670,7 @@ class EchoDashboard {
 
     async stopRecording() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
@@ -692,7 +703,7 @@ class EchoDashboard {
     // Voice Functions
     async toggleVoiceInput() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             if (this.settings.voiceEnabled) {
@@ -730,7 +741,7 @@ class EchoDashboard {
 
     async toggleWakeWord() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             if (this.settings.wakeWordEnabled) {
@@ -836,7 +847,7 @@ class EchoDashboard {
         }
 
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const formData = new FormData();
@@ -876,7 +887,7 @@ class EchoDashboard {
         chatInput.value = '';
 
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/ai/chat`, {
@@ -914,7 +925,7 @@ class EchoDashboard {
         if (!file) return;
 
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const formData = new FormData();
@@ -964,7 +975,7 @@ class EchoDashboard {
                 return;
             }
 
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get the file from the media display
@@ -1005,7 +1016,7 @@ class EchoDashboard {
     async scanWiFiNetworks() {
         try {
             this.showNotification('Scanning for WiFi networks...', 'info');
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/wifi/scan`, {
@@ -1091,7 +1102,7 @@ class EchoDashboard {
         }
 
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/wifi/connect`, {
@@ -1121,7 +1132,7 @@ class EchoDashboard {
     async scanBluetoothDevices() {
         try {
             this.showNotification('Scanning for Bluetooth devices...', 'info');
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/bluetooth/scan`, {
@@ -1179,7 +1190,7 @@ class EchoDashboard {
 
     async connectBluetoothDevice(deviceId) {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/bluetooth/connect`, {
@@ -1215,7 +1226,7 @@ class EchoDashboard {
     async createBackup() {
         try {
             this.showNotification('Creating backup...', 'info');
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/system/backup`, {
@@ -1241,7 +1252,7 @@ class EchoDashboard {
     async restartSystem() {
         if (confirm('Are you sure you want to restart the system?')) {
             try {
-                const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+                const apiUrl = this.getApiUrl();
                 const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
                 const response = await fetch(`${apiUrl}/api/system/restart`, {
@@ -1324,7 +1335,7 @@ class EchoDashboard {
         }
 
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             this.showNotification('Rebooting both Pi systems...', 'info');
@@ -1373,7 +1384,7 @@ class EchoDashboard {
 
     async updateStatus() {
         try {
-            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiUrl = this.getApiUrl();
             const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/status`, {
