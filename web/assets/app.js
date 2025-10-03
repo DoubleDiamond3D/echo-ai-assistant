@@ -267,7 +267,7 @@ class EchoDashboard {
         /*
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/cameras/list`, {
                 method: 'GET',
@@ -354,7 +354,7 @@ class EchoDashboard {
     async sendSettingsToServer() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const settingsPayload = {
                 voice_enabled: this.settings.voiceEnabled,
@@ -592,7 +592,7 @@ class EchoDashboard {
     async capturePhoto() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
             const cameraName = this.getCurrentCameraName();
@@ -628,7 +628,7 @@ class EchoDashboard {
     async startRecording() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
             const cameraName = this.getCurrentCameraName();
@@ -660,7 +660,7 @@ class EchoDashboard {
     async stopRecording() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get current camera name
             const cameraName = this.getCurrentCameraName();
@@ -693,7 +693,7 @@ class EchoDashboard {
     async toggleVoiceInput() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             if (this.settings.voiceEnabled) {
                 const response = await fetch(`${apiUrl}/api/voice/stop`, {
@@ -731,7 +731,7 @@ class EchoDashboard {
     async toggleWakeWord() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             if (this.settings.wakeWordEnabled) {
                 const response = await fetch(`${apiUrl}/api/wake-word/stop`, {
@@ -877,7 +877,7 @@ class EchoDashboard {
 
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/ai/chat`, {
                 method: 'POST',
@@ -915,7 +915,7 @@ class EchoDashboard {
 
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const formData = new FormData();
             formData.append('file', file);
@@ -965,7 +965,7 @@ class EchoDashboard {
             }
 
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             // Get the file from the media display
             let file;
@@ -1006,7 +1006,7 @@ class EchoDashboard {
         try {
             this.showNotification('Scanning for WiFi networks...', 'info');
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/wifi/scan`, {
                 method: 'GET',
@@ -1015,6 +1015,7 @@ class EchoDashboard {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('WiFi scan response:', data);
                 this.updateWiFiNetworks(data.networks || []);
                 this.showNotification('WiFi scan completed', 'success');
             } else {
@@ -1067,7 +1068,7 @@ class EchoDashboard {
 
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/wifi/connect`, {
                 method: 'POST',
@@ -1094,7 +1095,7 @@ class EchoDashboard {
         try {
             this.showNotification('Scanning for Bluetooth devices...', 'info');
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/bluetooth/scan`, {
                 method: 'GET',
@@ -1103,6 +1104,7 @@ class EchoDashboard {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('Bluetooth scan response:', data);
                 this.updateBluetoothDevices(data.devices || []);
                 this.showNotification('Bluetooth scan completed', 'success');
             } else {
@@ -1145,7 +1147,7 @@ class EchoDashboard {
     async connectBluetoothDevice(deviceId) {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/bluetooth/connect`, {
                 method: 'POST',
@@ -1178,7 +1180,7 @@ class EchoDashboard {
         try {
             this.showNotification('Creating backup...', 'info');
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/system/backup`, {
                 method: 'POST',
@@ -1204,7 +1206,7 @@ class EchoDashboard {
         if (confirm('Are you sure you want to restart the system?')) {
             try {
                 const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-                const apiKey = this.settings.echoApiKey || 'web-interface';
+                const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
                 const response = await fetch(`${apiUrl}/api/system/restart`, {
                     method: 'POST',
@@ -1287,7 +1289,7 @@ class EchoDashboard {
 
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             this.showNotification('Rebooting both Pi systems...', 'info');
 
@@ -1336,7 +1338,7 @@ class EchoDashboard {
     async updateStatus() {
         try {
             const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
-            const apiKey = this.settings.echoApiKey || 'web-interface';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
 
             const response = await fetch(`${apiUrl}/api/status`, {
                 method: 'GET',
