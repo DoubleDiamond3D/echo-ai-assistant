@@ -44,7 +44,7 @@ app.add_middleware(
 )
 
 # Configuration
-OLLAMA_URL = os.getenv('OLLAMA_URL', 'http://192.168.68.55:11434')
+OLLAMA_URL = os.getenv('OLLAMA_URL', 'http://localhost:11434')
 OPENAI_KEY = os.getenv('OPENAI_API_KEY')
 AUDIO_CACHE_DIR = Path('/app/audio_cache')
 AUDIO_CACHE_DIR.mkdir(exist_ok=True)

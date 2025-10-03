@@ -3,18 +3,15 @@ services:
   speech-server:
     build: ./speech-server
     container_name: echo-speech
-    ports:
-      - "5001:8080"
+    network_mode: host
     volumes:
       - ./models:/app/models
       - ./audio_cache:/app/audio_cache
     environment:
-      - OLLAMA_URL=http://192.168.68.55:11434
+      - OLLAMA_URL=http://localhost:11434
       - STT_MODEL=base
       - DEVICE=cpu
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   # Redis for caching
   redis:
