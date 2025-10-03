@@ -1,44 +1,141 @@
-# Pi #1 (Brain) Configuration
-# Echo AI Assistant - Brain Pi Environment Configuration
+# =============================================================================
+# Echo AI Configuration - Pi #1 (Brain) - 192.168.68.56
+# =============================================================================
 
-# Core Settings
-ECHO_ROLE=brain
+# =============================================================================
+# CORE SYSTEM SETTINGS
+# =============================================================================
 ECHO_API_TOKEN=Lolo6750
-ECHO_AI_MODEL=qwen2.5:latest
+ECHO_PI_ROLE=brain
+ECHO_PI_ID=1
+ECHO_BRAIN_PI_IP=192.168.68.56
+ECHO_BRAIN_PI_URL=http://192.168.68.56:5000
+ECHO_FACE_PI_IP=192.168.68.63
+ECHO_FACE_PI_URL=http://192.168.68.63:5000
 
-# Network Configuration
-ECHO_FACE_PI_URL=http://192.168.68.63:5001
-OLLAMA_URL=http://localhost:11434
+# =============================================================================
+# AI MODEL CONFIGURATION
+# =============================================================================
+# Primary AI: External Ollama Server
+OLLAMA_URL=http://192.168.68.55:11434
+ECHO_AI_MODEL=qwen3:latest
+ECHO_AI_FALLBACK_MODEL=deepseek-r1:latest
+ECHO_AI_TEMPERATURE=0.7
+ECHO_MAX_TOKENS=2048
 
-# Service Configuration - Brain Pi
-ECHO_WEB_INTERFACE_ENABLED=1
-ECHO_BACKUP_ENABLED=1
-ECHO_FACE_DISPLAY_ENABLED=0
-ECHO_VOICE_INPUT_ENABLED=0
-ECHO_CAMERA_ENABLED=0
+# Speech Processing Server (Docker on PC)
+SPEECH_SERVER_URL=http://192.168.68.55:5001
+SPEECH_STT_MODEL=whisper-large-v3
+SPEECH_TTS_MODEL=coqui-tts
+SPEECH_VOICE=female-1
 
-# Performance Settings
+# Backup AI: OpenAI (when Ollama unavailable)
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_FALLBACK_ENABLED=1
+
+# =============================================================================
+# VOICE & AUDIO SETTINGS (Pi #1 handles all voice/audio)
+# =============================================================================
+ECHO_VOICE_INPUT_ENABLED=1
+ECHO_VOICE_OUTPUT_ENABLED=1
+ECHO_VOICE_INPUT_LANGUAGE=en
+ECHO_VOICE_WAKE_WORD=echo
+ECHO_VOICE_SENSITIVITY=0.7
+ECHO_TTS_ENGINE=pyttsx3
+ECHO_TTS_VOICE=default
+ECHO_TTS_RATE=150
+
+# USB Audio Devices (Actual detected devices)
+ECHO_VOICE_INPUT_DEVICE=usb_mic
+ECHO_VOICE_OUTPUT_DEVICE=usb_speakers
+ECHO_USB_MIC_DEVICE=hw:4,0
+ECHO_USB_MIC_NAME="USB PnP Sound Device"
+ECHO_USB_SPEAKERS_DEVICE=hw:3,0
+ECHO_USB_SPEAKERS_NAME="Pebble V3"
+ECHO_AUDIO_SAMPLE_RATE=44100
+ECHO_AUDIO_CHANNELS=2
+ECHO_AUDIO_BUFFER_SIZE=1024
+
+# =============================================================================
+# CAMERA CONFIGURATION (Pi #1: USB + Front Pi Cam)
+# =============================================================================
+ECHO_CAMERA_ENABLED=1
+ECHO_CAMERA_USB_ENABLED=1
+ECHO_CAMERA_PI_FRONT_ENABLED=1
+
+# USB Camera (PC-LM1E - Primary)
+ECHO_CAMERA_USB_DEVICE=/dev/video0
+ECHO_CAMERA_USB_NAME="PC-LM1E"
+ECHO_CAMERA_USB_WIDTH=1280
+ECHO_CAMERA_USB_HEIGHT=720
+ECHO_CAMERA_USB_FPS=30
+
+# Pi Camera (Front - if connected)
+ECHO_CAMERA_PI_FRONT_DEVICE=/dev/video2
+ECHO_CAMERA_PI_FRONT_WIDTH=1280
+ECHO_CAMERA_PI_FRONT_HEIGHT=720
+ECHO_CAMERA_PI_FRONT_FPS=30
+
+# Camera Settings
+ECHO_CAMERA_DEFAULT=usb
+ECHO_CAMERA_QUALITY=85
+ECHO_CAMERA_AUTO_CAPTURE=0
+
+# =============================================================================
+# FACE RECOGNITION (Pi #1 handles face processing)
+# =============================================================================
+ECHO_FACE_RECOGNITION_ENABLED=1
+ECHO_FACE_RECOGNITION_CONFIDENCE=0.6
+ECHO_FACE_RECOGNITION_MODEL=hog
+ECHO_FACE_RECOGNITION_TOLERANCE=0.6
+ECHO_FACE_DATABASE_PATH=/opt/echo-ai/data/faces
+ECHO_FACE_LEARNING_ENABLED=1
+
+# =============================================================================
+# WEB INTERFACE & API
+# =============================================================================
+ECHO_WEB_HOST=0.0.0.0
+ECHO_WEB_PORT=5000
+ECHO_WEB_DEBUG=0
+ECHO_API_RATE_LIMIT=100
 ECHO_MAX_CONCURRENT_REQUESTS=10
 ECHO_REQUEST_TIMEOUT=30
 
-# Voice Settings (Disabled on Brain)
-ECHO_VOICE_INPUT_DEVICE=default
-ECHO_VOICE_INPUT_LANGUAGE=en
+# =============================================================================
+# REMOTE ACCESS & NETWORKING
+# =============================================================================
+# Cloudflare Tunnel
+CLOUDFLARE_TUNNEL_TOKEN=f1439dff-965c-49b9-864e-ab4db0bfafe6
+CLOUDFLARE_TUNNEL_ENABLED=1
 
-# Face Recognition (Disabled on Brain)
-ECHO_FACE_RECOGNITION_ENABLED=0
-ECHO_FACE_RECOGNITION_CONFIDENCE=0.6
-
-# Network and Remote Access
+# Network Settings
 ECHO_WIFI_SETUP_ENABLED=1
 ECHO_REMOTE_ACCESS_ENABLED=1
-CLOUDFLARE_TUNNEL_TOKEN=your-tunnel-token
+ECHO_SSH_ENABLED=1
 
-# Wallpaper Sync Settings
-WALLPAPER_SYNC_ENABLED=1
-WALLPAPER_SOURCE_DIR=/opt/echo-ai/wallpapers
-WALLPAPER_SYNC_INTERVAL=300
+# =============================================================================
+# STORAGE & BACKUP
+# =============================================================================
+ECHO_DATA_PATH=/opt/echo-ai/data
+ECHO_LOGS_PATH=/opt/echo-ai/logs
+ECHO_BACKUP_ENABLED=1
+ECHO_BACKUP_RETENTION_DAYS=30
+ECHO_WALLPAPER_PATH=/opt/echo-ai/wallpapers
 
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=/opt/echo-ai/logs/echo-brain.log
+# =============================================================================
+# PERFORMANCE & RESOURCE MANAGEMENT
+# =============================================================================
+ECHO_MAX_MEMORY_MB=1024
+ECHO_LOG_LEVEL=INFO
+ECHO_CACHE_ENABLED=1
+ECHO_CACHE_SIZE_MB=256
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+ECHO_WALLPAPER_SYNC_ENABLED=1
+ECHO_STATE_SYNC_ENABLED=1
+ECHO_CHAT_LOGGING_ENABLED=1
+ECHO_METRICS_ENABLED=1
+ECHO_AUTO_UPDATE_ENABLED=0

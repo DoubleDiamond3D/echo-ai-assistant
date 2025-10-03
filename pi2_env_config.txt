@@ -1,60 +1,146 @@
-# Pi #2 (Face) Configuration
-# Echo AI Assistant - Face Pi Environment Configuration
+# =============================================================================
+# Echo AI Configuration - Pi #2 (Face Display) - 192.168.68.63
+# =============================================================================
 
-# Core Settings
-ECHO_ROLE=face
+# =============================================================================
+# CORE SYSTEM SETTINGS
+# =============================================================================
 ECHO_API_TOKEN=Lolo6750
-ECHO_AI_MODEL=qwen2.5:latest
+ECHO_PI_ROLE=face
+ECHO_PI_ID=2
+ECHO_BRAIN_PI_IP=192.168.68.56
+ECHO_BRAIN_PI_URL=http://192.168.68.56:5000
+ECHO_FACE_PI_IP=192.168.68.63
+ECHO_FACE_PI_URL=http://192.168.68.63:5000
 
-# Network Configuration
-ECHO_BRAIN_PI_URL=http://192.168.68.62:5000
-OLLAMA_URL=http://192.168.68.62:11434
+# =============================================================================
+# AI MODEL CONFIGURATION (Pi #2 connects to Pi #1 for AI)
+# =============================================================================
+# Pi #2 gets AI responses via Pi #1's API
+OLLAMA_URL=http://192.168.68.55:11434
+ECHO_AI_MODEL=qwen3:latest
+ECHO_AI_FALLBACK_MODEL=deepseek-r1:latest
 
-# Service Configuration - Face Pi
-ECHO_WEB_INTERFACE_ENABLED=0
-ECHO_BACKUP_ENABLED=0
+# Speech Processing (via Pi #1 and Docker Server)
+SPEECH_SERVER_URL=http://192.168.68.55:5001
+
+# =============================================================================
+# VOICE & AUDIO SETTINGS (Disabled on Pi #2)
+# =============================================================================
+ECHO_VOICE_INPUT_ENABLED=0
+ECHO_VOICE_OUTPUT_ENABLED=0
+ECHO_VOICE_INPUT_DEVICE=none
+ECHO_VOICE_OUTPUT_DEVICE=none
+
+# =============================================================================
+# DISPLAY CONFIGURATION (Pi #2 primary function)
+# =============================================================================
 ECHO_FACE_DISPLAY_ENABLED=1
-ECHO_VOICE_INPUT_ENABLED=1
-ECHO_CAMERA_ENABLED=1
+ECHO_FACE_FULLSCREEN=1
+ECHO_FACE_WIDTH=800
+ECHO_FACE_HEIGHT=480
+ECHO_FACE_FPS=30
+ECHO_FACE_WALLPAPER_ENABLED=1
+ECHO_FACE_ANIMATIONS_ENABLED=0
+ECHO_FACE_OVERLAY_ENABLED=0
 
-# Performance Settings
-ECHO_MAX_CONCURRENT_REQUESTS=5
-ECHO_REQUEST_TIMEOUT=30
+# Display Modes
+ECHO_FACE_MODE=wallpaper_only
+ECHO_FACE_SCREENSAVER_TIMEOUT=300
+ECHO_FACE_BRIGHTNESS=100
 
-# Voice Settings
-ECHO_VOICE_INPUT_DEVICE=default
-ECHO_VOICE_INPUT_LANGUAGE=en
+# =============================================================================
+# CAMERA CONFIGURATION (Pi #2: Back Camera - Disabled for now)
+# =============================================================================
+ECHO_CAMERA_ENABLED=0
 
-# Face Recognition
-ECHO_FACE_RECOGNITION_ENABLED=1
-ECHO_FACE_RECOGNITION_CONFIDENCE=0.6
+# Back Camera (Commented out for future use)
+# ECHO_CAMERA_PI_BACK_ENABLED=0
+# ECHO_CAMERA_PI_BACK_DEVICE=/dev/video0
+# ECHO_CAMERA_PI_BACK_WIDTH=1280
+# ECHO_CAMERA_PI_BACK_HEIGHT=720
+# ECHO_CAMERA_PI_BACK_FPS=30
 
-# Display Settings
-ECHO_DISPLAY_WIDTH=1920
-ECHO_DISPLAY_HEIGHT=1080
-ECHO_DISPLAY_FULLSCREEN=1
+# =============================================================================
+# FACE RECOGNITION (Disabled on Pi #2 - handled by Pi #1)
+# =============================================================================
+ECHO_FACE_RECOGNITION_ENABLED=0
 
-# Camera Settings
-CAM_DEVICES={"head": "/dev/video0"}
-CAM_W=1280
-CAM_H=720
-CAM_FPS=30
+# =============================================================================
+# WALLPAPER SYNC SETTINGS
+# =============================================================================
+ECHO_WALLPAPER_SYNC_ENABLED=1
+ECHO_WALLPAPER_PATH=/opt/echo-ai/wallpapers
+ECHO_WALLPAPER_AUTO_REFRESH=1
+ECHO_WALLPAPER_CHECK_INTERVAL=5
 
-# Wallpaper Settings
-WALLPAPER_SYNC_ENABLED=1
-WALLPAPER_LOCAL_DIR=/opt/echo-ai/wallpapers
-WALLPAPER_SYNC_INTERVAL=300
-WALLPAPER_AUTO_CHANGE=1
-WALLPAPER_CHANGE_INTERVAL=1800
+# =============================================================================
+# STATE SYNCHRONIZATION
+# =============================================================================
+ECHO_STATE_SYNC_ENABLED=1
+ECHO_STATE_SYNC_INTERVAL=1
+ECHO_STATE_FILE_PATH=/opt/echo-ai/data/echo_state.json
 
-# Audio Settings
-AUDIO_OUTPUT_DEVICE=default
-AUDIO_VOLUME=0.8
+# =============================================================================
+# PERFORMANCE & RESOURCE MANAGEMENT
+# =============================================================================
+ECHO_MAX_MEMORY_MB=512
+ECHO_LOG_LEVEL=INFO
+ECHO_CACHE_ENABLED=0
+ECHO_LOW_POWER_MODE=1
 
-# Network (No remote access on Face Pi)
-ECHO_WIFI_SETUP_ENABLED=1
-ECHO_REMOTE_ACCESS_ENABLED=0
+# =============================================================================
+# HARDWARE COMMUNICATION (Pi #2 controls movement)
+# =============================================================================
+# Arduino Communication (Movement Control) - Not currently connected
+ECHO_ARDUINO_ENABLED=0
+ECHO_ARDUINO_PORT=/dev/ttyUSB0
+ECHO_ARDUINO_BAUDRATE=115200
+ECHO_ARDUINO_TIMEOUT=5
+ECHO_MOVEMENT_ENABLED=0
+ECHO_SERVO_CONTROL_ENABLED=0
 
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=/opt/echo-ai/logs/echo-face.log
+# ESP32 Communication (Additional Sensors/Controls) - Not currently connected
+ECHO_ESP32_ENABLED=0
+ECHO_ESP32_PORT=/dev/ttyUSB1
+ECHO_ESP32_BAUDRATE=115200
+ECHO_ESP32_TIMEOUT=5
+ECHO_ESP32_WIFI_ENABLED=0
+
+# Touchscreen (QDtech MPI5001) - Available for future use
+ECHO_TOUCHSCREEN_ENABLED=0
+ECHO_TOUCHSCREEN_DEVICE="QDtech MPI5001"
+
+# Serial Communication Settings
+ECHO_SERIAL_RETRY_ATTEMPTS=3
+ECHO_SERIAL_RECONNECT_DELAY=2
+ECHO_HARDWARE_WATCHDOG_ENABLED=1
+
+# Movement Commands
+ECHO_MOVEMENT_SPEED=50
+ECHO_SERVO_MIN_ANGLE=0
+ECHO_SERVO_MAX_ANGLE=180
+ECHO_MOVEMENT_SMOOTH_ENABLED=1
+
+# =============================================================================
+# NETWORKING (Pi #2 is client only)
+# =============================================================================
+ECHO_WEB_SERVER_ENABLED=0
+ECHO_API_SERVER_ENABLED=0
+ECHO_SSH_ENABLED=1
+
+# =============================================================================
+# STORAGE & BACKUP (Minimal on Pi #2)
+# =============================================================================
+ECHO_DATA_PATH=/opt/echo-ai/data
+ECHO_LOGS_PATH=/opt/echo-ai/logs
+ECHO_BACKUP_ENABLED=0
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+ECHO_CHAT_LOGGING_ENABLED=0
+ECHO_METRICS_ENABLED=0
+ECHO_AUTO_UPDATE_ENABLED=0
+ECHO_HARDWARE_CONTROL_ENABLED=1
+ECHO_MOVEMENT_LOGGING_ENABLED=1
