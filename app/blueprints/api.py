@@ -642,6 +642,14 @@ def connect_wifi() -> Response:
         
         # Try nmcli (NetworkManager)
         try:
+            # First, do a fresh rescan to ensure network is available
+            subprocess.run(['nmcli', 'device', 'wifi', 'rescan'], 
+                         capture_output=True, text=True, timeout=15)
+            
+            # Wait a moment for scan to complete
+            import time
+            time.sleep(2)
+            
             if password:
                 # Connect with password
                 result = subprocess.run(['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password], 
@@ -822,21 +830,31 @@ def connect_bluetooth() -> Response:
         import subprocess
         
         try:
-            # Pair with the device
-            pair_result = subprocess.run(['bluetoothctl', 'pair', device_id], 
-                                       capture_output=True, text=True, timeout=30)
+            # Use hcitool for more reliable connection
+            # First, try to connect directly
+            connect_result = subprocess.run(['sudo', 'hcitool', 'cc', device_id], 
+                                          capture_output=True, text=True, timeout=15)
             
-            if pair_result.returncode == 0:
-                # Connect to the device
-                connect_result = subprocess.run(['bluetoothctl', 'connect', device_id], 
-                                             capture_output=True, text=True, timeout=30)
-                
-                if connect_result.returncode == 0:
-                    return jsonify({"ok": True, "message": f"Successfully connected to {device_id}"})
-                else:
-                    return jsonify({"error": f"Failed to connect: {connect_result.stderr}"}), 400
+            if connect_result.returncode == 0:
+                return jsonify({"ok": True, "message": f"Successfully connected to {device_id}"})
             else:
-                return jsonify({"error": f"Failed to pair: {pair_result.stderr}"}), 400
+                # If direct connection fails, try bluetoothctl with shorter timeout
+                try:
+                    # Try pairing first
+                    pair_result = subprocess.run(['timeout', '10', 'bluetoothctl', 'pair', device_id], 
+                                               capture_output=True, text=True, timeout=15)
+                    
+                    # Try connecting regardless of pair result
+                    connect_result = subprocess.run(['timeout', '10', 'bluetoothctl', 'connect', device_id], 
+                                                 capture_output=True, text=True, timeout=15)
+                    
+                    if connect_result.returncode == 0:
+                        return jsonify({"ok": True, "message": f"Successfully connected to {device_id}"})
+                    else:
+                        return jsonify({"error": f"Failed to connect: {connect_result.stderr or 'Connection timeout'}"}, 400)
+                        
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    return jsonify({"error": "Bluetooth connection timed out"}, 400)
                 
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             return jsonify({"error": f"Connection failed: {str(e)}"}), 500
