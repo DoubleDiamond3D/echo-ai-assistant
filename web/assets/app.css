@@ -99,6 +99,17 @@ body::before {
   box-shadow: var(--glass-shadow);
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.system-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
 .logo {
   display: flex;
   align-items: center;

@@ -18,9 +18,15 @@
                 <div class="logo-icon">🤖</div>
                 <span>Echo AI Assistant</span>
             </div>
-            <div class="status-indicator">
-                <div class="status-dot"></div>
-                <span id="connection-status">Connected</span>
+            <div class="header-controls">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span id="connection-status">Connected</span>
+                </div>
+                <div class="system-controls">
+                    <button class="btn btn-sm btn-warning" id="restart-services">🔄 Restart Services</button>
+                    <button class="btn btn-sm btn-danger" id="restart-system">⚡ Restart System</button>
+                </div>
             </div>
         </header>
 
@@ -328,14 +334,10 @@
                     <input type="password" class="form-input" id="echo-api-key" placeholder="Echo AI API Key (for web interface authentication)">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">AI Service API Keys</label>
+                    <label class="form-label">AI Service Configuration</label>
                     <input type="password" class="form-input" id="openai-key" placeholder="OpenAI API Key">
-                    <input type="password" class="form-input" id="anthropic-key" placeholder="Anthropic API Key">
-                    <input type="text" class="form-input" id="ollama-url" placeholder="Ollama Server URL (e.g., http://localhost:11434)">
-                    <input type="password" class="form-input" id="porcupine-key" placeholder="Porcupine Access Key (for wake word)">
-                    <input type="text" class="form-input" id="snowboy-model" placeholder="Snowboy Model Path">
-                    <input type="text" class="form-input" id="vosk-model" placeholder="Vosk Model Path">
-                    <input type="password" class="form-input" id="cloudflare-token" placeholder="Cloudflare Tunnel Token">
+                    <input type="text" class="form-input" id="ollama-url" placeholder="Ollama Server URL" value="http://192.168.68.55:11434">
+                    <input type="text" class="form-input" id="speech-server-url" placeholder="Speech Server URL" value="http://192.168.68.55:8080">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Backup Settings</label>
@@ -357,9 +359,9 @@
                     <button class="btn btn-secondary" id="refresh-services">Refresh Services</button>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Cloudflare Tunnel</label>
-                    <input type="text" class="form-input" id="tunnel-token" placeholder="Cloudflare Tunnel Token">
-                    <button class="btn btn-primary" id="test-tunnel">Test Connection</button>
+                    <label class="form-label">Remote Access</label>
+                    <input type="password" class="form-input" id="cloudflare-token" placeholder="Cloudflare Tunnel Token">
+                    <button class="btn btn-primary" id="test-tunnel">Test Tunnel</button>
                 </div>
             </div>
         </div>
