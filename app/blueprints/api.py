@@ -691,49 +691,69 @@ def scan_bluetooth() -> Response:
                 "error": str(e)
             })
         
-        # Use bluetoothctl to scan for devices
+        # Start Bluetooth service first
         try:
-            # Start scanning
-            scan_result = subprocess.run(['bluetoothctl', 'scan', 'on'], 
-                                       capture_output=True, text=True, timeout=10)
+            # Start Bluetooth service
+            service_result = subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'], 
+                                          capture_output=True, text=True, timeout=10)
             debug_info["attempts"].append({
-                "command": "bluetoothctl scan on",
+                "command": "sudo systemctl start bluetooth",
+                "returncode": service_result.returncode,
+                "stdout": service_result.stdout[:200],
+                "stderr": service_result.stderr[:200]
+            })
+        except Exception as e:
+            debug_info["attempts"].append({
+                "command": "sudo systemctl start bluetooth",
+                "error": str(e)
+            })
+        
+        # Use hcitool for scanning (more reliable than bluetoothctl)
+        try:
+            # Enable Bluetooth adapter
+            hci_up_result = subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'], 
+                                         capture_output=True, text=True, timeout=10)
+            debug_info["attempts"].append({
+                "command": "sudo hciconfig hci0 up",
+                "returncode": hci_up_result.returncode,
+                "stdout": hci_up_result.stdout[:200],
+                "stderr": hci_up_result.stderr[:200]
+            })
+            
+            # Scan for devices using hcitool
+            scan_result = subprocess.run(['sudo', 'hcitool', 'scan'], 
+                                       capture_output=True, text=True, timeout=15)
+            debug_info["attempts"].append({
+                "command": "sudo hcitool scan",
                 "returncode": scan_result.returncode,
-                "stdout": scan_result.stdout[:200],
+                "stdout": scan_result.stdout[:500],
                 "stderr": scan_result.stderr[:200]
             })
             
-            # Wait a bit for devices to be discovered
-            import time
-            time.sleep(5)
-            
-            # Get discovered devices
-            devices_result = subprocess.run(['bluetoothctl', 'devices'], 
-                                          capture_output=True, text=True, timeout=10)
-            debug_info["attempts"].append({
-                "command": "bluetoothctl devices",
-                "returncode": devices_result.returncode,
-                "stdout": devices_result.stdout[:500],
-                "stderr": devices_result.stderr[:200]
-            })
-            
-            if devices_result.returncode == 0:
+            if scan_result.returncode == 0 and scan_result.stdout.strip():
                 devices = []
-                for line in devices_result.stdout.strip().split('\n'):
-                    if line.startswith('Device '):
-                        parts = line.split(' ', 2)
-                        if len(parts) >= 3:
-                            device_id = parts[1]
-                            device_name = parts[2]
+                lines = scan_result.stdout.strip().split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if line and not line.startswith('Scanning'):
+                        # Format: "XX:XX:XX:XX:XX:XX	Device Name"
+                        parts = line.split('\t', 1)
+                        if len(parts) >= 2:
+                            device_id = parts[0].strip()
+                            device_name = parts[1].strip() if parts[1].strip() else "Unknown Device"
                             devices.append({
                                 'id': device_id,
                                 'name': device_name,
                                 'status': 'Available'
                             })
-                
-                # Stop scanning
-                subprocess.run(['bluetoothctl', 'scan', 'off'], 
-                             capture_output=True, text=True, timeout=5)
+                        elif len(parts) == 1 and ':' in parts[0]:
+                            # Just MAC address, no name
+                            device_id = parts[0].strip()
+                            devices.append({
+                                'id': device_id,
+                                'name': 'Unknown Device',
+                                'status': 'Available'
+                            })
                 
                 return jsonify({"devices": devices, "debug": debug_info})
             else:
@@ -741,9 +761,44 @@ def scan_bluetooth() -> Response:
                 
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             debug_info["attempts"].append({
-                "command": "bluetoothctl",
+                "command": "hcitool scan",
                 "error": str(e)
             })
+            
+            # Fallback to bluetoothctl with shorter timeout
+            try:
+                # Try bluetoothctl with very short timeout
+                devices_result = subprocess.run(['bluetoothctl', 'devices'], 
+                                              capture_output=True, text=True, timeout=3)
+                debug_info["attempts"].append({
+                    "command": "bluetoothctl devices (fallback)",
+                    "returncode": devices_result.returncode,
+                    "stdout": devices_result.stdout[:500],
+                    "stderr": devices_result.stderr[:200]
+                })
+                
+                if devices_result.returncode == 0:
+                    devices = []
+                    for line in devices_result.stdout.strip().split('\n'):
+                        if line.startswith('Device '):
+                            parts = line.split(' ', 2)
+                            if len(parts) >= 3:
+                                device_id = parts[1]
+                                device_name = parts[2]
+                                devices.append({
+                                    'id': device_id,
+                                    'name': device_name,
+                                    'status': 'Available'
+                                })
+                    
+                    return jsonify({"devices": devices, "debug": debug_info})
+                    
+            except (subprocess.TimeoutExpired, FileNotFoundError) as e2:
+                debug_info["attempts"].append({
+                    "command": "bluetoothctl devices (fallback)",
+                    "error": str(e2)
+                })
+            
             return jsonify({"devices": [], "debug": debug_info})
         
     except Exception as exc:
