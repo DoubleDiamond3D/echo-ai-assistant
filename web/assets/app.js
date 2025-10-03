@@ -1016,8 +1016,11 @@ class EchoDashboard {
             if (response.ok) {
                 const data = await response.json();
                 console.log('WiFi scan response:', data);
-                if (data.debug) {
+                if (data.debug && data.debug.attempts) {
                     console.log('WiFi debug info:', data.debug);
+                    data.debug.attempts.forEach((attempt, index) => {
+                        console.log(`WiFi attempt ${index + 1}:`, attempt);
+                    });
                 }
                 this.updateWiFiNetworks(data.networks || []);
                 this.showNotification('WiFi scan completed', 'success');
@@ -1108,8 +1111,11 @@ class EchoDashboard {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Bluetooth scan response:', data);
-                if (data.debug) {
+                if (data.debug && data.debug.attempts) {
                     console.log('Bluetooth debug info:', data.debug);
+                    data.debug.attempts.forEach((attempt, index) => {
+                        console.log(`Bluetooth attempt ${index + 1}:`, attempt);
+                    });
                 }
                 this.updateBluetoothDevices(data.devices || []);
                 this.showNotification('Bluetooth scan completed', 'success');
