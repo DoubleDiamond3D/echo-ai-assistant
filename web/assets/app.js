@@ -249,22 +249,25 @@ class EchoDashboard {
     // Helper function to get camera name from device path
     getCurrentCameraName() {
         const selectedCamera = document.getElementById('camera-source')?.value || '/dev/video0';
-        if (selectedCamera.includes('video1')) {
-            return 'usb'; // USB camera
-        } else if (selectedCamera.includes('video0')) {
-            return 'head'; // Pi camera
+        if (selectedCamera.includes('video0')) {
+            return 'usb'; // USB camera (PC-LM1E) is on /dev/video0
+        } else if (selectedCamera.includes('video1')) {
+            return 'head'; // Pi camera (CSI) is on /dev/video1
         }
-        return 'head'; // Default
+        return 'usb'; // Default to USB camera since it's working
     }
 
     // Detect available cameras and populate dropdown
     async detectAvailableCameras() {
-        // For now, always show both cameras since detection API doesn't exist
-        // Based on your context files, these are the actual camera devices
+        // Pi Camera v1 (OV5647) detected but needs legacy camera enable
+        // USB Camera is working on /dev/video0
         const defaultCameras = [
-            { device: '/dev/video0', name: 'Pi Camera (CSI)', available: true },
-            { device: '/dev/video1', name: 'USB Camera (PC-LM1E)', available: true }
+            { device: '/dev/video0', name: 'USB Camera (PC-LM1E)', available: true },
+            { device: '/dev/video1', name: 'Pi Camera v1 (OV5647)', available: false } // Will be available after legacy camera enable
         ];
+
+        // Note: Pi camera will be available after running:
+        // echo "start_x=1" | sudo tee -a /boot/config.txt && sudo reboot
 
         this.populateCameraDropdown(defaultCameras);
 
