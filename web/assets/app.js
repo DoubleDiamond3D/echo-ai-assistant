@@ -465,13 +465,13 @@ class EchoDashboard {
                 const result = await response.json();
 
                 // Update camera feed - use correct streaming endpoint
-                const cameraName = selectedCamera.includes('video0') ? 'head' : 'front';
-                console.log(`Starting camera: ${cameraName} from device: ${selectedCamera}`);
+                const cameraName = selectedCamera; // Use the camera name directly (head, front, etc.)
+                console.log(`Starting camera: ${cameraName}`);
                 document.getElementById('camera-feed').innerHTML = `
                     <img src="${apiUrl}/stream/camera/${cameraName}?t=${Date.now()}" 
                          class="live-feed" alt="Live Camera Feed" 
-                         onload="console.log('Camera loaded successfully')"
-                         onerror="console.error('Camera failed to load:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
+                         onload="console.log('Camera ${cameraName} loaded successfully')"
+                         onerror="console.error('Camera ${cameraName} failed to load:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='">
                 `;
 
                 this.cameraActive = true;

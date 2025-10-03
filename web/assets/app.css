@@ -881,8 +881,13 @@ body::before {
   padding: 0.4rem 0.8rem;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   border-radius: var(--radius-sm);
+}
+
+.camera-select option {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 .live-feed {
