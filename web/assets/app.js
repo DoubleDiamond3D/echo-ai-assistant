@@ -7,6 +7,7 @@ class EchoDashboard {
         this.settings = this.loadSettings();
         this.cameraActive = false;
         this.recording = false;
+        this.currentMediaFile = null;
         this.init();
     }
 
@@ -783,6 +784,93 @@ class EchoDashboard {
     async updateMicSensitivity(value) {
         this.settings.micSensitivity = parseInt(value);
         this.saveSettings();
+    }
+
+    // Media Functions
+    async handleMediaUpload(file) {
+        if (!file) return;
+
+        try {
+            // Display the uploaded image in the media display area
+            const mediaDisplay = document.getElementById('media-display');
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                if (file.type.startsWith('image/')) {
+                    mediaDisplay.innerHTML = `
+                        <img src="${e.target.result}" alt="Uploaded media" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+                        <div class="media-info">
+                            <p><strong>${file.name}</strong></p>
+                            <p>Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                    `;
+                } else if (file.type.startsWith('video/')) {
+                    mediaDisplay.innerHTML = `
+                        <video controls style="max-width: 100%; max-height: 200px;">
+                            <source src="${e.target.result}" type="${file.type}">
+                        </video>
+                        <div class="media-info">
+                            <p><strong>${file.name}</strong></p>
+                            <p>Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                    `;
+                }
+            };
+
+            reader.readAsDataURL(file);
+            this.currentMediaFile = file;
+            this.showNotification(`Media uploaded: ${file.name}`, 'success');
+
+        } catch (error) {
+            console.error('Error handling media upload:', error);
+            this.showNotification('Failed to upload media', 'error');
+        }
+    }
+
+    async clearMedia() {
+        const mediaDisplay = document.getElementById('media-display');
+        mediaDisplay.innerHTML = `
+            <div class="media-upload-icon">📁</div>
+            <div class="media-upload-text">Click to upload image or video</div>
+            <div class="media-upload-text" style="font-size: 0.8rem; margin-top: 4px;">Supports: JPG, PNG, GIF, MP4, WebM</div>
+        `;
+        this.currentMediaFile = null;
+        this.showNotification('Media cleared', 'info');
+    }
+
+    async setPiWallpaper() {
+        if (!this.currentMediaFile) {
+            this.showNotification('Please upload an image first', 'error');
+            return;
+        }
+
+        try {
+            const apiUrl = this.settings.echoApiUrl || 'http://localhost:5000';
+            const apiKey = this.settings.echoApiKey || 'Lolo6750';
+
+            const formData = new FormData();
+            formData.append('file', this.currentMediaFile);
+            formData.append('type', this.currentMediaFile.type.startsWith('image/') ? 'image' : 'video');
+
+            const response = await fetch(`${apiUrl}/api/pi/wallpaper/upload`, {
+                method: 'POST',
+                headers: {
+                    'X-API-Key': apiKey
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.showNotification(result.message || 'Wallpaper set successfully!', 'success');
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to set wallpaper');
+            }
+        } catch (error) {
+            console.error('Error setting Pi wallpaper:', error);
+            this.showNotification(`Failed to set wallpaper: ${error.message}`, 'error');
+        }
     }
 
     // Chat Functions
